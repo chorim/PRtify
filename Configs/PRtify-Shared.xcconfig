@@ -1,0 +1,13 @@
+//
+//  PRtify-Shared.xcconfig
+//  PRtify
+//
+//  Created by Insu Byeon on 2023/09/05.
+//  Copyright © 2023 is.byeon. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+GITHUB_API_KEY=#INSERT_YOUR_API_KEY#
+GITHUB_API_SECRET=#INSERT_YOUR_API_SECRET#

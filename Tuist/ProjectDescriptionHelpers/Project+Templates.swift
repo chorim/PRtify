@@ -12,19 +12,25 @@ extension Project {
                                      platform: platform,
                                      dependencies: additionalTargets.map { TargetDependency.target(name: $0) })
         targets += additionalTargets.flatMap({ makeFrameworkTargets(name: $0, platform: platform) })
+        let configurations: [Configuration] = [
+            .debug(name: "Debug", settings: [:], xcconfig: .relativeToRoot("Configs/Debug.xcconfig")),
+            .release(name: "Release", settings: [:], xcconfig: .relativeToRoot("Configs/Release.xcconfig"))
+        ]
         return Project(name: name,
-                       organizationName: "tuist.io",
+                       organizationName: organizationName,
+                       settings: .settings(configurations: configurations),
                        targets: targets)
     }
 
     // MARK: - Private
+    private static let organizationName = "is.byeon"
 
     /// Helper function to create a framework target and an associated unit test target
     private static func makeFrameworkTargets(name: String, platform: Platform) -> [Target] {
         let sources = Target(name: name,
                 platform: platform,
                 product: .framework,
-                bundleId: "io.tuist.\(name)",
+                bundleId: "\(organizationName).\(name)",
                 infoPlist: .default,
                 sources: ["Targets/\(name)/Sources/**"],
                 resources: [],
@@ -32,7 +38,7 @@ extension Project {
         let tests = Target(name: "\(name)Tests",
                 platform: platform,
                 product: .unitTests,
-                bundleId: "io.tuist.\(name)Tests",
+                bundleId: "\(organizationName).\(name)Tests",
                 infoPlist: .default,
                 sources: ["Targets/\(name)/Tests/**"],
                 resources: [],
@@ -54,7 +60,7 @@ extension Project {
             name: name,
             platform: platform,
             product: .app,
-            bundleId: "io.tuist.\(name)",
+            bundleId: "\(organizationName).\(name)",
             infoPlist: .extendingDefault(with: infoPlist),
             sources: ["Targets/\(name)/Sources/**"],
             resources: ["Targets/\(name)/Resources/**"],
@@ -65,7 +71,7 @@ extension Project {
             name: "\(name)Tests",
             platform: platform,
             product: .unitTests,
-            bundleId: "io.tuist.\(name)Tests",
+            bundleId: "\(organizationName).\(name)Tests",
             infoPlist: .default,
             sources: ["Targets/\(name)/Tests/**"],
             dependencies: [
