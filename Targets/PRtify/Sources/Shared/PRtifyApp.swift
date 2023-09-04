@@ -8,11 +8,25 @@
 
 import SwiftUI
 
+#if os(iOS)
+typealias ApplicationDelegateAdaptor = UIApplicationDelegateAdaptor
+#elseif os(macOS)
+typealias ApplicationDelegateAdaptor = NSApplicationDelegateAdaptor
+#endif
+
 @main
 struct PRtifyApp: App {
+    @ApplicationDelegateAdaptor(PRtifyAppDelegate.self) var delegate
+    
+    var session: Session {
+        delegate.session
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SignInView()
+                .environmentObject(delegate)
+                .environment(\.session, session)
         }
     }
 }

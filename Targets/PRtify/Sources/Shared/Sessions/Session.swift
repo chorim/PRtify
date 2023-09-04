@@ -8,7 +8,14 @@
 
 import Foundation
 
+extension Dictionary {
+    public static var empty: Self { [:] }
+}
+
 public class Session {
+    public typealias HTTPParameters = [String: Any]
+    public typealias HTTPHeaders = [String: String]
+    
     public static let shared = Session()
     
     public init(configuration: URLSessionConfiguration = .prfy_default) {
@@ -18,19 +25,36 @@ public class Session {
     public func data(for request: URLRequest) async throws -> Data {
         let (data, response) = try await urlSession.data(for: request)
         
-        guard let httpResponse = response as? HTTPURLResponse else { throw SessionError.invalidResponse }
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SessionError.invalidResponse
+        }
         
-        guard (200..<300).contains(httpResponse.statusCode) else { throw SessionError.invalidStatusCode }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw SessionError.invalidStatusCode
+        }
         
         return data
     }
     
-    public func fetchRequestForToken() async throws -> OAuthToken {
-        let authorizeURL = URL(githubAPIWithPath: "login/oauth/authorize")!
-        var urlRequest = URLRequest(url: authorizeURL)
+    public func authorizeURL(grants scopes: [Scopes]) -> URL {
+        let authorizeURL = URL(githubAPIWithPath: "login/oauth/authorize", isRoot: true)!
+
+        let httpParameters: HTTPParameters = ["client_id": "15c305090f7833520cf8",
+                                              "scopes": scopes.map { $0.description }.joined(separator: ",")]
         
-        return OAuthToken()
+        let urlRequset = URLRequest(url: authorizeURL,
+                                    httpMethod: .get,
+                                    httpParameters: httpParameters)
+        return urlRequset.url!
+        
+        //prtify://oauth?code=7fbd917f8570bb612acc
     }
+    
+    // public func fetchRequestForToken() async throws -> OAuthToken {
+    //     var urlRequest = URLRequest(url: authorizeURL)
+    //     
+    //     return OAuthToken()
+    // }
     
     // MARK: Private
     private let urlSessionConfiguration: URLSessionConfiguration
@@ -44,7 +68,7 @@ public extension URLSessionConfiguration {
         configuration.httpAdditionalHeaders = {
             var httpAdditionalHeaders = configuration.httpAdditionalHeaders ?? [:]
             
-            httpAdditionalHeaders["Accept"] = "application/vnd.github.v3+json"
+            httpAdditionalHeaders["Accept"] = "application/json"
             
             let preferredLanguages = Set(Locale.preferredLanguages.flatMap { [$0, $0.components(separatedBy: "-")[0]] } + ["*"])
             httpAdditionalHeaders["Accept-Language"] = preferredLanguages.joined(separator: ", ")
