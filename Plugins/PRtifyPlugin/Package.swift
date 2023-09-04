@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MyPlugin",
+    name: "PRtifyPlugin",
     products: [
         .executable(name: "tuist-my-cli", targets: ["tuist-my-cli"]),
     ],
