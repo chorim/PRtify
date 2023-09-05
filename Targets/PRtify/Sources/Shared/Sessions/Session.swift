@@ -18,8 +18,17 @@ public class Session {
     
     public static let shared = Session()
     
-    public init(configuration: URLSessionConfiguration = .prfy_default) {
-        self.urlSessionConfiguration = configuration
+    public var apiKey: String {
+        sessionConfiguration.apiKey
+    }
+    
+    public var apiSecretKey: String {
+        sessionConfiguration.apiSecretKey
+    }
+    
+    public init(configuration: SessionConfiguration = .default) {
+        self.sessionConfiguration = configuration
+        self.urlSession = URLSession(configuration: configuration.sessionConfiguration)
     }
     
     public func data(for request: URLRequest) async throws -> Data {
@@ -39,27 +48,42 @@ public class Session {
     public func authorizeURL(grants scopes: [Scopes]) -> URL {
         let authorizeURL = URL(githubAPIWithPath: "login/oauth/authorize", isRoot: true)!
 
-        let httpParameters: HTTPParameters = ["client_id": "15c305090f7833520cf8",
-                                              "scopes": scopes.map { $0.description }.joined(separator: ",")]
+        let httpParameters: HTTPParameters = [
+            "client_id": apiKey,
+            "scopes": scopes.map { $0.description }.joined(separator: ",")
+        ]
         
         let urlRequset = URLRequest(url: authorizeURL,
                                     httpMethod: .get,
                                     httpParameters: httpParameters)
-        return urlRequset.url!
         
-        //prtify://oauth?code=7fbd917f8570bb612acc
+        return urlRequset.url!
     }
     
-    // public func fetchRequestForToken() async throws -> OAuthToken {
-    //     var urlRequest = URLRequest(url: authorizeURL)
-    //     
-    //     return OAuthToken()
-    // }
+    public func fetchRequestForToken(code: String) async throws -> AuthToken {
+        let issueTokenURL = URL(githubAPIWithPath: "login/oauth/access_token", isRoot: true)!
+        
+        let httpParameters: HTTPParameters = [
+            "client_id": apiKey,
+            "client_secret": apiSecretKey,
+            "code": code
+        ]
+        
+        let urlRequest = URLRequest(url: issueTokenURL,
+                                    httpMethod: .post,
+                                    httpParameters: httpParameters)
+        
+        let (data, _) = try await urlSession.data(for: urlRequest)
+        
+        print(String(data: data, encoding: .utf8))
+        let authToken = try JSONDecoder().decode(AuthToken.self, from: data)
+        
+        return authToken
+    }
     
     // MARK: Private
-    private let urlSessionConfiguration: URLSessionConfiguration
-    private var urlSession = URLSession(configuration: .prfy_default)
-    
+    private let sessionConfiguration: SessionConfiguration
+    private let urlSession: URLSession
 }
 
 public extension URLSessionConfiguration {

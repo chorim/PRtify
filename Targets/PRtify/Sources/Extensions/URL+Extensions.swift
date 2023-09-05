@@ -11,7 +11,7 @@ import Foundation
 extension URL {
     func appendingQueryParameters(_ parameters: Session.HTTPParameters, encoding: URLEncoding) -> URL {
         var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: true)!
-       
+        
         let percentEncodedQuery = urlComponents.percentEncodedQuery.map { $0 + "&" } ?? ""
         let urlComponentsQuery = percentEncodedQuery + encoding.query(parameters)
         
@@ -20,6 +20,25 @@ extension URL {
         }
         
         return urlComponents.url!
+    }
+    
+    var queryDictionary: [String: String]? {
+        guard let query = self.query else { return nil }
+        
+        var queryStrings = [String: String]()
+        
+        for pair in query.components(separatedBy: "&") {
+            let key = pair.components(separatedBy: "=")[0]
+            
+            let value = pair
+                .components(separatedBy:"=")[1]
+                .replacingOccurrences(of: "+", with: " ")
+                .removingPercentEncoding ?? ""
+            
+            queryStrings[key] = value
+        }
+        
+        return queryStrings
     }
 }
 
