@@ -43,10 +43,10 @@ public class Session {
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw SessionError.invalidStatusCode
         }
-        
+
         return data
     }
-    
+
     public func authorizeURL(grants scopes: [Scopes]) -> URL {
         let authorizeURL = URL(githubAPIWithPath: "login/oauth/authorize", isRoot: true)!
 
@@ -54,7 +54,7 @@ public class Session {
             "client_id": apiKey,
             "scope": scopes.map { $0.description }.joined(separator: " ")
         ]
-        
+
         let urlRequset = URLRequest(url: authorizeURL,
                                     httpMethod: .get,
                                     httpParameters: httpParameters)
