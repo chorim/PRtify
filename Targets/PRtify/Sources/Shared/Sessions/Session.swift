@@ -12,10 +12,12 @@ extension Dictionary {
     public static var empty: Self { [:] }
 }
 
-public class Session {
+extension Session {
     public typealias HTTPParameters = [String: Any]
     public typealias HTTPHeaders = [String: String]
-    
+}
+
+public class Session {
     public static let shared = Session()
     
     public var apiKey: String {
@@ -63,6 +65,8 @@ public class Session {
     public func fetchRequestForToken(code: String) async throws -> AuthToken {
         let issueTokenURL = URL(githubAPIWithPath: "login/oauth/access_token", isRoot: true)!
         
+        logger.debug("issueTokenURL: \(issueTokenURL)")
+        
         let httpParameters: HTTPParameters = [
             "client_id": apiKey,
             "client_secret": apiSecretKey,
@@ -75,7 +79,6 @@ public class Session {
         
         let (data, _) = try await urlSession.data(for: urlRequest)
         
-        print(String(data: data, encoding: .utf8))
         let authToken = try JSONDecoder().decode(AuthToken.self, from: data)
         
         return authToken

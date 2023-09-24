@@ -9,7 +9,7 @@
 import SwiftUI
 import AuthenticationServices
 
-struct SignInView: View {
+struct SignInView: View, Loggable {
     @Environment(\.session) private var session: Session
     
     @AppStorage("authToken")
@@ -22,6 +22,18 @@ struct SignInView: View {
             VStack(alignment: .leading) {
                 if authToken != nil {
                     Text("Logged in!")
+                        .onAppear {
+                            if let authToken {
+                                logger.debug("Logged in: \(String(describing: authToken), privacy: .public)")
+                            }
+                        }
+                    
+                    Button {
+                        authToken = nil
+                        logger.debug("Logged out")
+                    } label: {
+                        Text("Logged out")
+                    }
                 } else {
                     if let webAuthenticationSession {
                         WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
