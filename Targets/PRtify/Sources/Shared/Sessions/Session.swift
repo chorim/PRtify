@@ -50,7 +50,7 @@ public class Session {
 
         let httpParameters: HTTPParameters = [
             "client_id": apiKey,
-            "scopes": scopes.map { $0.description }.joined(separator: ",")
+            "scope": scopes.map { $0.description }.joined(separator: " ")
         ]
         
         let urlRequset = URLRequest(url: authorizeURL,
