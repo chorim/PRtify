@@ -12,57 +12,50 @@ import AuthenticationServices
 struct SignInView: View, Loggable {
     @Environment(\.session) private var session: Session
 
-    @AppStorage("authToken") private var authToken: Session.AuthToken? = nil
-
     @State private var webAuthenticationSession: ASWebAuthenticationSession?
-
+    @State private var error: Error?
+    
+    @Binding var authToken: Session.AuthToken?
+    
     var body: some View {
-        NavigationView {
-            VStack(alignment: .leading) {
-                if authToken != nil {
-                    Text("Logged in!")
-                        .onAppear {
-                            if let authToken {
-                                logger.debug("Logged in: \(String(describing: authToken), privacy: .public)")
-                            }
-                        }
-
-                    Button {
-                        authToken = nil
-                        logger.debug("Logged out")
-                    } label: {
-                        Text("Logged out")
-                    }
-                } else {
-                    if let webAuthenticationSession {
-                        WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            AsyncButton("Sign in with GitHub", action: signIn)
+                .padding()
+                .background(Color.black)
+                .foregroundColor(Color.white)
+                .clipShape(RoundedRectangle(cornerSize: .init(width: 12, height: 12)))
+            
+            if let webAuthenticationSession {
+                WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
+                    .zIndex(-1)
             }
-            .onAppear(perform: {
-                Task {
-                    do {
-                        let authToken = try await session.authorize(grants: [.repo, .user]) { webAuthenticationSession in
-                            webAuthenticationSession.prefersEphemeralWebBrowserSession = true
+        }
+        .alert(error: $error)
+    }
 
-                            self.webAuthenticationSession = webAuthenticationSession
-                        }
+    func signIn() async {
+        do {
+            defer {
+                self.webAuthenticationSession = nil
+            }
+            
+            let authToken = try await session.authorize(grants: [.repo, .user]) { webAuthenticationSession in
+                webAuthenticationSession.prefersEphemeralWebBrowserSession = true
+            
+                self.webAuthenticationSession = webAuthenticationSession
+            }
 
-                        self.authToken = authToken
-                    } catch {
-                        print("Error", error, error.localizedDescription)
-                    }
-
-                }
-
-            })
-            .navigationTitle("Sign In")
+            self.authToken = authToken
+        } catch {
+            logger.error("Sign in with GitHub error: \(error.localizedDescription)")
+            self.error = error
         }
     }
 }
 
 struct SignInView_Previews: PreviewProvider {
     static var previews: some View {
-        SignInView()
+        SignInView(authToken: .constant(nil))
+            .previewLayout(.fixed(width: 320, height: 100))
     }
 }

@@ -16,6 +16,10 @@ typealias ApplicationDelegateAdaptor = NSApplicationDelegateAdaptor
 
 @main
 struct PRtifyApp: App {
+    static var isPreview: Bool {
+        return ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    }
+    
     @ApplicationDelegateAdaptor(PRtifyAppDelegate.self) var delegate
 
     var session: Session {
@@ -24,7 +28,7 @@ struct PRtifyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SignInView()
+            MainView()
                 .environmentObject(delegate)
                 .environment(\.session, session)
         }
