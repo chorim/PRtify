@@ -17,7 +17,7 @@ extension Session {
     public typealias HTTPHeaders = [String: String]
 }
 
-public class Session {
+public class Session: Loggable {
     public static let shared = Session()
 
     public var apiKey: String {

@@ -9,11 +9,11 @@
 import Foundation
 import OSLog
 
-protocol Loggable {
+public protocol Loggable {
     var logger: Logger { get }
 }
 
-extension Loggable {
+public extension Loggable {
     var logger: Logger {
         Logger(category: String(describing: type(of: self)))
     }
@@ -39,5 +39,3 @@ extension Logger {
         return entries
     }
 }
-
-extension Session: Loggable {}
