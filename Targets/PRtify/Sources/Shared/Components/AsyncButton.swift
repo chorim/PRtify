@@ -53,6 +53,7 @@ struct AsyncButton<Label: View>: View {
 
                     if showProgressView {
                         ProgressView()
+                            .colorInvert()
                     }
                 }
             }
