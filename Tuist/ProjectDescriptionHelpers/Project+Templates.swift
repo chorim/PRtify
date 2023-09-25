@@ -21,10 +21,10 @@ extension Project {
                        settings: .settings(configurations: configurations),
                        targets: targets)
     }
-    
+
     // MARK: - Private
     private static let organizationName = "is.byeon"
-    
+
     /// Helper function to create a framework target and an associated unit test target
     private static func makeFrameworkTargets(name: String, platform: Platform) -> [Target] {
         let sources = Target(name: name,
@@ -45,7 +45,7 @@ extension Project {
                            dependencies: [.target(name: name)])
         return [sources, tests]
     }
-    
+
     /// Helper function to create the application target and the unit test target.
     private static func makeAppTargets(name: String, platform: Platform, dependencies: [TargetDependency]) -> [Target] {
         let platform: Platform = platform
@@ -53,9 +53,11 @@ extension Project {
             "CFBundleShortVersionString": "1.0",
             "CFBundleVersion": "1",
             "UIMainStoryboardFile": "",
-            "UILaunchStoryboardName": "LaunchScreen"
+            "UILaunchStoryboardName": "LaunchScreen",
+            "GITHUB_API_KEY": "$(GITHUB_API_KEY)",
+            "GITHUB_API_SECRET": "$(GITHUB_API_SECRET)"
         ]
-        
+
         let mainTarget = Target(
             name: name,
             platform: platform,
@@ -67,7 +69,7 @@ extension Project {
             scripts: [.pre(path: .relativeToRoot("scripts/lint.sh"), name: "SwiftLint")],
             dependencies: dependencies
         )
-        
+
         let testTarget = Target(
             name: "\(name)Tests",
             platform: platform,
