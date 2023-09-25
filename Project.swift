@@ -7,4 +7,7 @@ import PRtifyPlugin
 // Creates our project using a helper function defined in ProjectDescriptionHelpers
 let project = Project.app(name: "PRtify",
                           platform: .iOS,
-                          additionalTargets: [])
+                          additionalTargets: [],
+                          additionalDependencies: [
+                            .external(name: "KeychainAccess")
+                          ])
