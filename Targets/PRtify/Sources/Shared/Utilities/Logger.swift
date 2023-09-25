@@ -21,7 +21,7 @@ extension Loggable {
 
 extension Logger {
     private static var subsystem: String = Bundle.main.bundleIdentifier!
-    
+
     init(category: String) {
         self.init(subsystem: Self.subsystem, category: category)
     }
@@ -35,10 +35,9 @@ extension Logger {
             .compactMap { $0 as? OSLogEntryLog }
             .filter { $0.subsystem == Bundle.main.bundleIdentifier! }
             .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
-        
+
         return entries
     }
 }
 
 extension Session: Loggable {}
-

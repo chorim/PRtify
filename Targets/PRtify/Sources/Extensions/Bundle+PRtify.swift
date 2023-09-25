@@ -10,14 +10,8 @@ import Foundation
 
 extension Bundle {
     private class BundleFinder {}
-    
+
     static var prtify: Self {
         self.init(for: BundleFinder.self)
-    }
-}
-
-extension Bundle {
-    public var name: String {
-        infoDictionary?["CFBundleName"] as! String
     }
 }

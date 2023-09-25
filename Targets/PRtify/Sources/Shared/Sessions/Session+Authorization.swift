@@ -15,7 +15,7 @@ public extension Session {
         webAuthenticationSessionHandler: @escaping (ASWebAuthenticationSession) -> Void
     ) async throws -> AuthToken {
         let authorizeURL = authorizeURL(grants: scopes)
-        
+
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             webAuthenticationSessionHandler(
                 ASWebAuthenticationSession(url: authorizeURL, callbackURLScheme: "prtify") { url, error in
@@ -27,11 +27,11 @@ public extension Session {
                 }
             )
         }
-        
+
         guard let code = url.queryDictionary?["code"] else {
             throw SessionError.invalidResponse
         }
-        
+
         let authToken = try await fetchRequestForToken(code: code)
 
         return authToken

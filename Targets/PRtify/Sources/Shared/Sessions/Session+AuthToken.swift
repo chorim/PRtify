@@ -12,7 +12,7 @@ extension Session {
     public struct AuthToken: Codable {
         let accessToken: String
         let tokenType: TokenType
-        
+
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
             case tokenType = "token_type"

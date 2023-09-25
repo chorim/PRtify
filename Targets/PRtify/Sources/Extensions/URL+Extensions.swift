@@ -11,44 +11,44 @@ import Foundation
 extension URL {
     func appendingQueryParameters(_ parameters: Session.HTTPParameters, encoding: URLEncoding) -> URL {
         var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: true)!
-        
+
         let percentEncodedQuery = urlComponents.percentEncodedQuery.map { $0 + "&" } ?? ""
         let urlComponentsQuery = percentEncodedQuery + encoding.query(parameters)
-        
+
         if !urlComponentsQuery.isEmpty {
             urlComponents.query = urlComponentsQuery
         }
-        
+
         return urlComponents.url!
     }
-    
+
     var queryDictionary: [String: String]? {
         guard let query = self.query else { return nil }
-        
+
         var queryStrings = [String: String]()
-        
+
         for pair in query.components(separatedBy: "&") {
             let key = pair.components(separatedBy: "=")[0]
-            
+
             let value = pair
-                .components(separatedBy:"=")[1]
+                .components(separatedBy: "=")[1]
                 .replacingOccurrences(of: "+", with: " ")
                 .removingPercentEncoding ?? ""
-            
+
             queryStrings[key] = value
         }
-        
+
         return queryStrings
     }
 }
 
 // MARK: URLEncoding
 public struct URLEncoding {
-    
+
     public enum ArrayEncoding {
         case brackets
         case noBrackets
-        
+
         public func encode(key: String) -> String {
             switch self {
             case .brackets:
@@ -58,11 +58,11 @@ public struct URLEncoding {
             }
         }
     }
-    
+
     public enum BoolEncoding {
         case numeric
         case literal
-        
+
         public func encode(flag: Bool) -> String {
             switch self {
             case .numeric:
@@ -72,29 +72,29 @@ public struct URLEncoding {
             }
         }
     }
-    
+
     public let arrayEncoding: ArrayEncoding
     public let boolEncoding: BoolEncoding
-    
+
     public init(arrayEncoding: ArrayEncoding = .brackets, boolEncoding: BoolEncoding = .literal) {
         self.arrayEncoding = arrayEncoding
         self.boolEncoding = boolEncoding
     }
-    
+
     public func query(_ parameters: [String: Any]) -> String {
         var components = [(String, String)]()
-        
+
         for key in parameters.keys.sorted(by: <) {
             let value = parameters[key]!
             components += queryComponents(fromKey: key, value: value)
         }
-        
+
         return components.map { "\($0)=\($1)" }.joined(separator: "&")
     }
-    
+
     private func queryComponents(fromKey key: String, value: Any) -> [(String, String)] {
         var components = [(String, String)]()
-        
+
         if let dictionary = value as? [String: Any] {
             for (innerKey, value) in dictionary {
                 components += queryComponents(fromKey: "\(key)[\(innerKey)]", value: value)
@@ -108,7 +108,7 @@ public struct URLEncoding {
         } else {
             components.append((key, "\(value)"))
         }
-        
+
         return components
     }
 }

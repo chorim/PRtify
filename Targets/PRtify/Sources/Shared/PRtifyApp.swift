@@ -17,7 +17,7 @@ typealias ApplicationDelegateAdaptor = NSApplicationDelegateAdaptor
 @main
 struct PRtifyApp: App {
     @ApplicationDelegateAdaptor(PRtifyAppDelegate.self) var delegate
-    
+
     var session: Session {
         delegate.session
     }
