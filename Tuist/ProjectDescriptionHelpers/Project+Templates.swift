@@ -7,10 +7,17 @@ import ProjectDescription
 
 extension Project {
     /// Helper function to create the Project for this ExampleApp
-    public static func app(name: String, platform: Platform, additionalTargets: [String]) -> Project {
-        var targets = makeAppTargets(name: name,
-                                     platform: platform,
-                                     dependencies: additionalTargets.map { TargetDependency.target(name: $0) })
+    public static func app(
+        name: String,
+        platform: Platform,
+        additionalTargets: [String],
+        additionalDependencies: [TargetDependency]
+    ) -> Project {
+        var targets = makeAppTargets(
+            name: name,
+            platform: platform,
+            dependencies: additionalTargets.map { TargetDependency.target(name: $0) } + additionalDependencies
+        )
         targets += additionalTargets.flatMap({ makeFrameworkTargets(name: $0, platform: platform) })
         let configurations: [Configuration] = [
             .debug(name: "Debug", settings: [:], xcconfig: .relativeToRoot("Configs/Debug.xcconfig")),
