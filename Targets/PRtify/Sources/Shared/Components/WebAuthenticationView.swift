@@ -118,16 +118,3 @@ extension WebAuthenticationView.View: ASWebAuthenticationPresentationContextProv
     }
 }
 #endif
-
-//
-// struct WebAuthenticationView: View {
-//     var body: some View {
-//         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-//     }
-// }
-//
-// struct WebAuthenticationView_Previews: PreviewProvider {
-//     static var previews: some View {
-//         WebAuthenticationView()
-//     }
-// }

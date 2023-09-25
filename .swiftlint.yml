@@ -1,5 +1,6 @@
 disabled_rules:
   - trailing_comma
+  - redundant_optional_initialization
 opt_in_rules:
   - anyobject_protocol
   - array_init
@@ -47,3 +48,7 @@ type_name:
     - '_'
   excluded:
     - ''
+
+excluded:
+  - Tuist
+

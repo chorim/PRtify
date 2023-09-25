@@ -11,7 +11,7 @@ import Foundation
 @MainActor
 class PRtifyAppDelegate: NSObject, ObservableObject {
     let session = Session.shared
-    
+
     override init() {
         super.init()
     }

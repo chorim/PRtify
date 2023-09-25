@@ -14,22 +14,21 @@ extension URLRequest {
                 httpParameters: Session.HTTPParameters,
                 httpHeaders: Session.HTTPHeaders = [:]) {
         var mutableURL = url
-        
+
         let encoding = URLEncoding()
-        
+
         if httpMethod == .get {
             mutableURL = url.appendingQueryParameters(httpParameters, encoding: encoding)
         }
-        
+
         self.init(url: mutableURL)
-        
+
         self.httpMethod = "\(httpMethod)"
-        
-        
+
         var mutableHttpHeaders = httpHeaders
         mutableHttpHeaders.merge(httpHeaders) { _, new in new }
         mutableHttpHeaders.forEach { addValue($0.value, forHTTPHeaderField: $0.key) }
-        
+
         if httpMethod == .post || httpMethod == .put {
             self.httpBody = encoding.query(httpParameters).data(using: .utf8)
         }

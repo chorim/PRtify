@@ -11,12 +11,11 @@ import AuthenticationServices
 
 struct SignInView: View, Loggable {
     @Environment(\.session) private var session: Session
-    
-    @AppStorage("authToken")
-    var authToken: Session.AuthToken? = nil
-    
+
+    @AppStorage("authToken") private var authToken: Session.AuthToken? = nil
+
     @State private var webAuthenticationSession: ASWebAuthenticationSession?
-    
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading) {
@@ -27,7 +26,7 @@ struct SignInView: View, Loggable {
                                 logger.debug("Logged in: \(String(describing: authToken), privacy: .public)")
                             }
                         }
-                    
+
                     Button {
                         authToken = nil
                         logger.debug("Logged out")
@@ -45,17 +44,17 @@ struct SignInView: View, Loggable {
                     do {
                         let authToken = try await session.authorize(grants: [.repo, .user]) { webAuthenticationSession in
                             webAuthenticationSession.prefersEphemeralWebBrowserSession = true
-                            
+
                             self.webAuthenticationSession = webAuthenticationSession
                         }
-                        
+
                         self.authToken = authToken
                     } catch {
                         print("Error", error, error.localizedDescription)
                     }
-                    
+
                 }
-                
+
             })
             .navigationTitle("Sign In")
         }

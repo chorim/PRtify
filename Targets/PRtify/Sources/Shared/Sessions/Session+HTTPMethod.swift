@@ -15,7 +15,7 @@ extension Session {
         case put
         case patch
         case delete
-        
+
         public var description: String {
             rawValue.uppercased()
         }

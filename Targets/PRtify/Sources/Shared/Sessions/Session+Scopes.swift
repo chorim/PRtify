@@ -12,7 +12,7 @@ extension Session {
     public enum Scopes: String, CustomStringConvertible {
         case repo
         case user
-        
+
         public var description: String {
             rawValue
         }
