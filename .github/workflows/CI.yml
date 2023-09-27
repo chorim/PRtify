@@ -12,19 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  Prepare:
-    name: Preparing
-    runs-on: macos-12
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      - name: Install Xcpretty
-        run: gem install xcpretty --no-document --quiet
-        
   Test:
     name: Run test
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       fail-fast: false
 
