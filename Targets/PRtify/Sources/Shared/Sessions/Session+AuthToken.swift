@@ -19,7 +19,9 @@ extension Session {
         }
     }
 
-    public enum TokenType: String, Codable {
+    public enum TokenType: String, Codable, CustomStringConvertible {
         case bearer
+        
+        public var description: String { rawValue.capitalized }
     }
 }

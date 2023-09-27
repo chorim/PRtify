@@ -77,16 +77,57 @@ public class Session: Loggable {
                                     httpMethod: .post,
                                     httpParameters: httpParameters)
 
-        let (data, _) = try await urlSession.data(for: urlRequest)
-
-        let authToken = try JSONDecoder().decode(AuthToken.self, from: data)
-
-        return authToken
+        return try await urlSession.data(for: urlRequest, AuthToken.self)
+    }
+    
+    public func updateToken(with authToken: AuthToken) {
+        urlSession.credential = SessionCredential(authToken: authToken)
+    }
+    
+    public func getProfile() async throws -> User {
+        let url = URL(githubAPIWithPath: "user")!
+        
+        let urlRequest = URLRequest(url: url)
+        
+        return try await urlSession.data(for: urlRequest, User.self)
     }
 
     // MARK: Private
     private let sessionConfiguration: SessionConfiguration
     private let urlSession: URLSession
+}
+
+public struct SessionCredential {
+    let authToken: Session.AuthToken
+}
+
+public extension URLSession {
+    private struct AssociatedKey {
+        fileprivate static var credentialKey: Void?
+   }
+    
+    static let decoder: JSONDecoder = .init()
+
+    var credential: SessionCredential? {
+        get { objc_getAssociatedObject(self, &AssociatedKey.credentialKey) as? SessionCredential }
+        set { objc_setAssociatedObject(self, &AssociatedKey.credentialKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
+    func data<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
+        var mutableURLRequest = urlRequest
+        
+        if let credential {
+            let authorization = [
+                credential.authToken.tokenType.description,
+                credential.authToken.accessToken
+            ].joined(separator: " ")
+            
+            mutableURLRequest.setValue(authorization, forHTTPHeaderField: "Authorization")
+        }
+        
+        let (data, _) = try await self.data(for: mutableURLRequest)
+        return try Self.decoder.decode(T.self, from: data)
+    }
 }
 
 public extension URLSessionConfiguration {

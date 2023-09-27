@@ -31,10 +31,16 @@ struct MainView: View, Loggable {
                         Text("Settings")
                     }
             }
+            .onAppear(perform: updateAuthToken)
         } else {
             SignInView(authToken: $authToken)
                 .environment(\.session, session)
         }
+    }
+    
+    private func updateAuthToken() {
+        guard let authToken else { return }
+        session.updateToken(with: authToken)
     }
 }
 
