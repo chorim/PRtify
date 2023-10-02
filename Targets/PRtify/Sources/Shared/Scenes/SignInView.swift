@@ -27,7 +27,7 @@ struct SignInView: View, Loggable {
             
             if let webAuthenticationSession {
                 WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
-                    .zIndex(-1)
+                    .frame(width: 0, height: 0)
             }
         }
         .alert(error: $error)
