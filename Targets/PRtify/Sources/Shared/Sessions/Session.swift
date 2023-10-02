@@ -84,7 +84,7 @@ public class Session: Loggable {
         urlSession.credential = SessionCredential(authToken: authToken)
     }
     
-    public func getProfile() async throws -> User {
+    public func fetchProfile() async throws -> User {
         let url = URL(githubAPIWithPath: "user")!
         
         let urlRequest = URLRequest(url: url)
