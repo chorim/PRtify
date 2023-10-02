@@ -12,44 +12,53 @@ struct HomeView: View, Loggable {
     @Environment(\.session) private var session: Session
     @Binding var authToken: Session.AuthToken?
     
-    @State var user: User? = nil
-    @State var error: Error? = nil
+    @State private var user: User? = nil
+    @State private var error: Error? = nil
+    
+    @State private var showingRepositoriesAddView: Bool = false
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack {
-                    Text("Hello, Home!")
-                        
-                    Button {
-                        authToken = nil
-                        logger.info("Sign out")
-                    } label: {
-                        Text("Sign Out")
+            if authToken != nil {
+                List {
+                    RepositoriesListView(showingRepositoriesAddView: $showingRepositoriesAddView)
+                }
+                .task(fetchProfile)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        avatarView
                     }
                 }
-            }
-            .alert(error: $error)
-            .task(getProfile)
-            .navigationTitle("Home")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    avatarView
-                }
+                .navigationTitle("Home")
+            } else {
+                SignInView(authToken: $authToken)
+                    .navigationTitle("Home")
             }
         }
+        .sheet(isPresented: $showingRepositoriesAddView) {
+            RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
+        }
+        .alert(error: $error)
     }
-    
+
     @Sendable
-    func getProfile() async {
+    func fetchProfile() async {
         // TODO: Handling the network connection when preview state
-        guard await !PRtifyApp.isPreview else { return }
+        guard await !PRtifyApp.isPreview else {
+            self.user = .init(
+                id: 0,
+                url: URL(string: "https://github.com/chorim")!,
+                avatarURL: URL(string: "https://avatars.githubusercontent.com/u/11539551?v=4")!,
+                name: "Chorim"
+            )
+            return
+        }
         
         do {
-            self.user = try await session.getProfile()
+            self.user = try await session.fetchProfile()
         } catch {
             self.error = error
-            logger.error("getProfile() error: \(error.localizedDescription)")
+            logger.error("fetchProfile() error: \(error.localizedDescription)")
         }
     }
     
@@ -75,5 +84,5 @@ struct HomeView: View, Loggable {
 }
 
 #Preview {
-    HomeView(authToken: .constant(nil))
+    HomeView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
 }

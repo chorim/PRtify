@@ -16,26 +16,21 @@ struct MainView: View, Loggable {
     @KeychainStorage("authToken") private var authToken: Session.AuthToken? = nil
     
     var body: some View {
-        if authToken != nil {
-            TabView {
-                HomeView(authToken: $authToken)
-                    .environment(\.session, session)
-                    .tabItem {
-                        Image(systemName: "house")
-                        Text("Home")
-                    }
-                
-                SettingView()
-                    .tabItem {
-                        Image(systemName: "gear")
-                        Text("Settings")
-                    }
-            }
-            .onAppear(perform: updateAuthToken)
-        } else {
-            SignInView(authToken: $authToken)
+        TabView {
+            HomeView(authToken: $authToken)
                 .environment(\.session, session)
+                .tabItem {
+                    Image(systemName: "house")
+                    Text("Home")
+                }
+            
+            SettingView()
+                .tabItem {
+                    Image(systemName: "gear")
+                    Text("Settings")
+                }
         }
+        .onAppear(perform: updateAuthToken)
     }
     
     private func updateAuthToken() {
