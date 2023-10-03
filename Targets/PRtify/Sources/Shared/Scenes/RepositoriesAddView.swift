@@ -9,6 +9,8 @@
 import SwiftUI
 
 struct RepositoriesAddView: View {
+    @Environment(\.modelContext) private var modelContext
+    
     @Binding var showingRepositoriesAddView: Bool
     
     @State private var text: String = ""
@@ -20,16 +22,22 @@ struct RepositoriesAddView: View {
             }
             
             Button {
+                self.add()
                 self.showingRepositoriesAddView = false
             } label: {
                 HStack {
                     Spacer()
-                    Image(systemName: "plus")
-                    Text("Add")
+                    Label("Add", systemImage: "plus")
                     Spacer()
                 }
             }
         }
+    }
+    
+    func add() {
+        guard let url = URL(string: text) else { return }
+        let repository = Repository(url: url)
+        modelContext.insert(repository)
     }
 }
 

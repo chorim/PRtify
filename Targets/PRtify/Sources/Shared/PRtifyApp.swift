@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 #if os(iOS)
 typealias ApplicationDelegateAdaptor = UIApplicationDelegateAdaptor
@@ -32,5 +33,6 @@ struct PRtifyApp: App {
                 .environmentObject(delegate)
                 .environment(\.session, session)
         }
+        .modelContainer(for: Repository.self)
     }
 }

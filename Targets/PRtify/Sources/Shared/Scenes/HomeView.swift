@@ -7,9 +7,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HomeView: View, Loggable {
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.session) private var session: Session
+    
     @Binding var authToken: Session.AuthToken?
     
     @State private var user: User? = nil
@@ -17,11 +20,25 @@ struct HomeView: View, Loggable {
     
     @State private var showingRepositoriesAddView: Bool = false
     
+    @Query(sort: [SortDescriptor(\Repository.createdAt, order: .reverse)], animation: .smooth)
+    private var repositories: [Repository]
+    
     var body: some View {
         NavigationView {
             if authToken != nil {
                 List {
-                    RepositoriesListView(showingRepositoriesAddView: $showingRepositoriesAddView)
+                    if repositories.isEmpty {
+                        emptyView
+                    } else {
+                        ForEach(repositories) { repository in
+                            Text("\(repository.url.absoluteString)")
+                                .font(.headline)
+                        }
+                    }
+                    
+                    Section {
+                        addButton
+                    }
                 }
                 .task(fetchProfile)
                 .toolbar {
@@ -79,6 +96,24 @@ struct HomeView: View, Loggable {
                     ProgressView()
                 }
             )
+        }
+    }
+    
+    @ViewBuilder
+    var emptyView: some View {
+        ContentUnavailableView {
+            Label("Empty repository", systemImage: "tray.fill")
+        } description: {
+            Text("New repository you added will be display here.")
+        }
+    }
+    
+    @ViewBuilder
+    var addButton: some View {
+        Button {
+            self.showingRepositoriesAddView = true
+        } label: {
+            Label("Add", systemImage: "plus")
         }
     }
 }
