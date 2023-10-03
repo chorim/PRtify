@@ -26,3 +26,23 @@ extension PRtifyError: LocalizedError {
         error.recoverySuggestion
     }
 }
+
+enum PRtifyURLError: Error {
+    case invalidURL
+}
+
+extension PRtifyURLError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL"
+        }
+    }
+    
+    var recoverySuggestion: String? {
+        switch self {
+        case .invalidURL:
+            return "Please make sure the input is correct."
+        }
+    }
+}

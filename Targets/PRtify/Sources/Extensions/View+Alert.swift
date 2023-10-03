@@ -18,7 +18,7 @@ extension View {
                 error.wrappedValue = nil
             }
         } message: { error in
-            Text(error.errorDescription ?? "Unknown Error")
+            Text(error.recoverySuggestion ?? "Unknown Error")
         }
     }
 }

@@ -8,11 +8,12 @@
 
 import SwiftUI
 
-struct RepositoriesAddView: View {
+struct RepositoriesAddView: View, Loggable {
     @Environment(\.modelContext) private var modelContext
     
     @Binding var showingRepositoriesAddView: Bool
     
+    @State private var error: Error?
     @State private var text: String = ""
     
     var body: some View {
@@ -21,23 +22,40 @@ struct RepositoriesAddView: View {
                 Text("URL")
             }
             
-            Button {
-                self.add()
-                self.showingRepositoriesAddView = false
-            } label: {
-                HStack {
-                    Spacer()
-                    Label("Add", systemImage: "plus")
-                    Spacer()
-                }
+            Section {
+                addButton
             }
         }
+        .alert(error: $error)
     }
     
-    func add() {
-        guard let url = URL(string: text) else { return }
+    func add() throws {
+        guard let url = URL(string: text) else {
+            logger.error("Invalid the url: \(text)")
+            throw PRtifyURLError.invalidURL
+        }
+        
         let repository = Repository(url: url)
         modelContext.insert(repository)
+    }
+    
+    @ViewBuilder
+    var addButton: some View {
+        Button {
+            do {
+                try self.add()
+                self.showingRepositoriesAddView = false
+            } catch {
+                self.error = error
+                logger.error("An error occurred while performing add: \(error.localizedDescription)")
+            }
+        } label: {
+            HStack {
+                Spacer()
+                Label("Add", systemImage: "plus")
+                Spacer()
+            }
+        }
     }
 }
 
