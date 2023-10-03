@@ -34,6 +34,7 @@ struct HomeView: View, Loggable {
                             Text("\(repository.url.absoluteString)")
                                 .font(.headline)
                         }
+                        .onDelete(perform: deleteRepository)
                     }
                     
                     Section {
@@ -76,6 +77,13 @@ struct HomeView: View, Loggable {
         } catch {
             self.error = error
             logger.error("fetchProfile() error: \(error.localizedDescription)")
+        }
+    }
+    
+    func deleteRepository(_ indexSet: IndexSet) {
+        for index in indexSet {
+            let repository = repositories[index]
+            modelContext.delete(repository)
         }
     }
     
