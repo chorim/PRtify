@@ -14,10 +14,18 @@ class Repository {
     var url: URL
     var createdAt: Date
     var updatedAt: Date
+    var status: RepositoryStatus
     
-    init(url: URL, createdAt: Date = .now, updatedAt: Date = .now) {
+    init(url: URL) {
         self.url = url
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
+        self.createdAt = .now
+        self.updatedAt = .now
+        self.status = .underlying
     }
+}
+
+enum RepositoryStatus: Int, Codable {
+    case underlying = 0
+    case connected = 1
+    case disconnected = 2
 }

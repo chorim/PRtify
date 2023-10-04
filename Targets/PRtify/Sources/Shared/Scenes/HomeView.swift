@@ -41,7 +41,12 @@ struct HomeView: View, Loggable {
                 .task(fetchProfile)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        avatarView
+                        if let avatarURL = user?.avatarURL {
+                            AvatarView(avatarURL: Binding { avatarURL } set: { _ in })
+                                .onTapGesture {
+                                    self.showingProfileView = true
+                                }
+                        }
                     }
                 }
                 .navigationTitle("Home")
@@ -54,21 +59,17 @@ struct HomeView: View, Loggable {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
         }
         .sheet(isPresented: $showingProfileView) {
-            ProfileView()
+            if let user {
+                ProfileView(user: Binding { user } set: { self.user = $0 })
+            }
         }
         .alert(error: $error)
     }
 
     @Sendable
     func fetchProfile() async {
-        // TODO: Handling the network connection when preview state
         guard await !PRtifyApp.isPreview else {
-            self.user = .init(
-                id: 0,
-                url: URL(string: "https://github.com/chorim")!,
-                avatarURL: URL(string: "https://avatars.githubusercontent.com/u/11539551?v=4")!,
-                name: "Chorim"
-            )
+            self.user = .mock
             return
         }
         
@@ -88,28 +89,6 @@ struct HomeView: View, Loggable {
     }
     
     // MARK: Views
-    @ViewBuilder
-    var avatarView: some View {
-        if let user {
-            AsyncImage(
-                url: user.avatarURL,
-                content: { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: 42, maxHeight: 42)
-                        .clipShape(Circle())
-                },
-                placeholder: {
-                    ProgressView()
-                }
-            )
-            .onTapGesture {
-                self.showingProfileView = true
-            }
-        }
-    }
-    
     @ViewBuilder
     var emptyView: some View {
         ContentUnavailableView {
@@ -137,7 +116,20 @@ struct HomeView: View, Loggable {
                 
                 Spacer()
              
-                Image(systemName: "checkmark")
+                switch repository.status {
+                case .connected:
+                    Image(systemName: "checkmark")
+                        .renderingMode(.template)
+                        .foregroundColor(.green)
+                    
+                case .disconnected:
+                    Image(systemName: "xmark")
+                        .renderingMode(.template)
+                        .foregroundColor(.red)
+                    
+                case .underlying:
+                    ProgressView()
+                }
             }
         }
         .onDelete(perform: deleteRepository)
