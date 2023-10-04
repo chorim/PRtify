@@ -19,6 +19,7 @@ struct HomeView: View, Loggable {
     @State private var error: Error? = nil
     
     @State private var showingRepositoriesAddView: Bool = false
+    @State private var showingProfileView: Bool = false
     
     @Query(sort: [SortDescriptor(\Repository.createdAt, order: .reverse)], animation: .smooth)
     private var repositories: [Repository]
@@ -30,11 +31,7 @@ struct HomeView: View, Loggable {
                     if repositories.isEmpty {
                         emptyView
                     } else {
-                        ForEach(repositories) { repository in
-                            Text("\(repository.url.absoluteString)")
-                                .font(.headline)
-                        }
-                        .onDelete(perform: deleteRepository)
+                        repositoryView
                     }
                     
                     Section {
@@ -55,6 +52,9 @@ struct HomeView: View, Loggable {
         }
         .sheet(isPresented: $showingRepositoriesAddView) {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
+        }
+        .sheet(isPresented: $showingProfileView) {
+            ProfileView()
         }
         .alert(error: $error)
     }
@@ -104,6 +104,9 @@ struct HomeView: View, Loggable {
                     ProgressView()
                 }
             )
+            .onTapGesture {
+                self.showingProfileView = true
+            }
         }
     }
     
@@ -124,8 +127,24 @@ struct HomeView: View, Loggable {
             Label("Add", systemImage: "plus")
         }
     }
+    
+    @ViewBuilder
+    var repositoryView: some View {
+        ForEach(repositories) { repository in
+            HStack {
+                Text("\(repository.url.absoluteString)")
+                    .font(.headline)
+                
+                Spacer()
+             
+                Image(systemName: "checkmark")
+            }
+        }
+        .onDelete(perform: deleteRepository)
+    }
 }
 
 #Preview {
     HomeView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
+        .modelContainer(PRtifyPreviewContainer.self)
 }
