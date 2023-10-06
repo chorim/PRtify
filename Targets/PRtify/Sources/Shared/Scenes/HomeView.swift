@@ -8,8 +8,11 @@
 
 import SwiftUI
 import SwiftData
+import SwiftUIIntrospect
 
 struct HomeView: View, Loggable {
+    @EnvironmentObject private var delegate: PRtifyAppDelegate
+    
     @Environment(\.modelContext) private var modelContext
     @Environment(\.session) private var session: Session
     
@@ -59,9 +62,9 @@ struct HomeView: View, Loggable {
             }
             .background(Color.flatDarkBackground)
             .navigationTitle("Home")
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(Color.flatDarkBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+        }
+        .introspect(.navigationStack, on: .iOS(.v16, .v17)) {
+            delegate.configureNavigationBar($0)
         }
         .sheet(isPresented: $showingRepositoriesAddView) {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
@@ -76,7 +79,7 @@ struct HomeView: View, Loggable {
 
     @Sendable
     func fetchProfile() async {
-        guard await !PRtifyApp.isPreview else {
+        guard !PRtifyApp.isPreview else {
             self.user = .mock
             return
         }

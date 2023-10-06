@@ -9,5 +9,6 @@ let project = Project.app(name: "PRtify",
                           platform: .iOS,
                           additionalTargets: [],
                           additionalDependencies: [
-                            .external(name: "KeychainAccess")
+                            .external(name: "KeychainAccess"),
+                            .external(name: "SwiftUIIntrospect")
                           ])

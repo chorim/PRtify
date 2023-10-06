@@ -7,14 +7,20 @@
 //
 
 import SwiftUI
+import SwiftUIIntrospect
 
 struct SettingView: View {
+    @EnvironmentObject private var delegate: PRtifyAppDelegate
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.flatDarkBackground.edgesIgnoringSafeArea([.all])
             }
             .navigationTitle("Settings")
+            .introspect(.navigationStack, on: .iOS(.v16, .v17)) { 
+                delegate.configureNavigationBar($0)
+            }
         }
         .preferredColorScheme(.dark)
     }

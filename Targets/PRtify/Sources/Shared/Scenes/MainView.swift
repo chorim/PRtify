@@ -20,6 +20,7 @@ struct MainView: View, Loggable {
             Group {
                 HomeView(authToken: $authToken)
                     .environment(\.session, session)
+                    .environmentObject(delegate)
                     .tabItem {
                         Group {
                             Image(systemName: "house")
@@ -30,6 +31,7 @@ struct MainView: View, Loggable {
                     }
                 
                 SettingView()
+                    .environmentObject(delegate)
                     .tabItem {
                         Group {
                             Image(systemName: "gear")

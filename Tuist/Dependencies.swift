@@ -11,7 +11,8 @@ import ProjectDescriptionHelpers
 let dependencies = Dependencies(
     swiftPackageManager: SwiftPackageManagerDependencies(
         [
-            .remote(url: "https://github.com/kishikawakatsumi/KeychainAccess", requirement: .upToNextMajor(from: "4.2.0"))
+            .remote(url: "https://github.com/kishikawakatsumi/KeychainAccess", requirement: .upToNextMajor(from: "4.2.0")),
+            .remote(url: "https://github.com/siteline/swiftui-introspect", requirement: .upToNextMajor(from: "1.1.0"))
         ]
     )
 )

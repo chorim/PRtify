@@ -9,8 +9,25 @@
 import UIKit
 
 extension PRtifyAppDelegate: UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
         return true
+    }
+    
+    func configureNavigationBar(_ navigationController: UINavigationController) {
+        let navigationBarAppearance = UINavigationBarAppearance()
+        navigationBarAppearance.shadowColor = .clear
+        navigationBarAppearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationBarAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        
+        navigationBarAppearance.backgroundColor = .flatDarkBackground
+        navigationBarAppearance.shadowImage = UIImage()
+        
+        navigationController.navigationBar.compactAppearance = navigationBarAppearance
+        navigationController.navigationBar.standardAppearance = navigationBarAppearance
+        navigationController.navigationBar.scrollEdgeAppearance = navigationBarAppearance
+        navigationController.navigationBar.compactScrollEdgeAppearance = navigationBarAppearance
     }
 }
