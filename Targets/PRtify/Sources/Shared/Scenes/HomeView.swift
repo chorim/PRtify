@@ -25,35 +25,43 @@ struct HomeView: View, Loggable {
     private var repositories: [Repository]
     
     var body: some View {
-        NavigationView {
-            if authToken != nil {
-                List {
-                    if repositories.isEmpty {
-                        emptyView
-                    } else {
-                        repositoryView
-                    }
-                    
-                    Section {
-                        addButton
-                    }
-                }
-                .task(fetchProfile)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if let avatarURL = user?.avatarURL {
-                            AvatarView(avatarURL: Binding { avatarURL } set: { _ in })
-                                .onTapGesture {
-                                    self.showingProfileView = true
-                                }
+        NavigationStack {
+            Group {
+                if authToken != nil {
+                    List {
+                        if repositories.isEmpty {
+                            emptyView
+                        } else {
+                            repositoryView
+                                .listRowBackground(Color.flatDarkCardBackground)
+                        }
+                        
+                        Section {
+                            addButton
+                                .listRowBackground(Color.flatDarkCardBackground)
                         }
                     }
+                    .scrollContentBackground(.hidden)
+                    .task(fetchProfile)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            if let avatarURL = user?.avatarURL {
+                                AvatarView(avatarURL: Binding { avatarURL } set: { _ in })
+                                    .onTapGesture {
+                                        self.showingProfileView = true
+                                    }
+                            }
+                        }
+                    }
+                } else {
+                    SignInView(authToken: $authToken)
                 }
-                .navigationTitle("Home")
-            } else {
-                SignInView(authToken: $authToken)
-                    .navigationTitle("Home")
             }
+            .background(Color.flatDarkBackground)
+            .navigationTitle("Home")
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color.flatDarkBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
         .sheet(isPresented: $showingRepositoriesAddView) {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
@@ -103,7 +111,12 @@ struct HomeView: View, Loggable {
         Button {
             self.showingRepositoriesAddView = true
         } label: {
-            Label("Add", systemImage: "plus")
+            HStack {
+                Spacer()
+                Label("Add", systemImage: "plus")
+                    .foregroundStyle(.white)
+                Spacer()
+            }
         }
     }
     
@@ -113,6 +126,7 @@ struct HomeView: View, Loggable {
             HStack {
                 Text("\(repository.url.absoluteString)")
                     .font(.headline)
+                    .foregroundStyle(.white)
                 
                 Spacer()
              
@@ -120,15 +134,17 @@ struct HomeView: View, Loggable {
                 case .connected:
                     Image(systemName: "checkmark")
                         .renderingMode(.template)
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                     
                 case .disconnected:
                     Image(systemName: "xmark")
                         .renderingMode(.template)
-                        .foregroundColor(.red)
+                        .foregroundStyle(.red)
                     
                 case .underlying:
                     ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.white))
+                        .background(Color.flatDarkCardBackground)
                 }
             }
         }

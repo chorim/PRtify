@@ -18,16 +18,20 @@ struct SignInView: View, Loggable {
     @Binding var authToken: Session.AuthToken?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            AsyncButton("Sign in with GitHub", action: signIn)
-                .padding()
-                .background(Color.black)
-                .foregroundColor(Color.white)
-                .clipShape(RoundedRectangle(cornerSize: .init(width: 12, height: 12)))
+        ZStack {
+            Color.flatDarkBackground.ignoresSafeArea()
             
-            if let webAuthenticationSession {
-                WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
-                    .frame(width: 0, height: 0)
+            VStack(alignment: .leading, spacing: 0) {
+                AsyncButton("Sync in with GitHub", action: signIn)
+                    .padding()
+                    .background(Color.black)
+                    .foregroundColor(Color.white)
+                    .clipShape(RoundedRectangle(cornerSize: .init(width: 12, height: 12)))
+                
+                if let webAuthenticationSession {
+                    WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
+                        .frame(width: 0, height: 0)
+                }
             }
         }
         .alert(error: $error)

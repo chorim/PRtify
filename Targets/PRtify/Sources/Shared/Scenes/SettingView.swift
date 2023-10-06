@@ -10,7 +10,13 @@ import SwiftUI
 
 struct SettingView: View {
     var body: some View {
-        Text("Hello, Setting!")
+        NavigationStack {
+            ZStack {
+                Color.flatDarkBackground.edgesIgnoringSafeArea([.all])
+            }
+            .navigationTitle("Settings")
+        }
+        .preferredColorScheme(.dark)
     }
 }
 

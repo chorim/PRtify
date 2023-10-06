@@ -17,18 +17,31 @@ struct MainView: View, Loggable {
     
     var body: some View {
         TabView {
-            HomeView(authToken: $authToken)
-                .environment(\.session, session)
-                .tabItem {
-                    Image(systemName: "house")
-                    Text("Home")
-                }
-            
-            SettingView()
-                .tabItem {
-                    Image(systemName: "gear")
-                    Text("Settings")
-                }
+            Group {
+                HomeView(authToken: $authToken)
+                    .environment(\.session, session)
+                    .tabItem {
+                        Group {
+                            Image(systemName: "house")
+                                .renderingMode(.template)
+                            Text("Home")
+                        }
+                        .foregroundStyle(Color.white)
+                    }
+                
+                SettingView()
+                    .tabItem {
+                        Group {
+                            Image(systemName: "gear")
+                                .renderingMode(.template)
+                            Text("Settings")
+                        }
+                        .foregroundStyle(Color.white)
+                    }
+            }
+            .toolbarBackground(.visible, for: .tabBar)
+            .toolbarBackground(Color.flatDarkBackground, for: .tabBar)
+            .toolbarColorScheme(.dark, for: .tabBar)
         }
         .onAppear(perform: updateAuthToken)
     }
