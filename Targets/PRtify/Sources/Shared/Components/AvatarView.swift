@@ -12,7 +12,8 @@ import SwiftUI
 struct AvatarView: View {
     @Binding var avatarURL: URL
     
-    var style: AvatarViewStyle = .small
+    @Environment(\.avatarViewStyle)
+    var style: AvatarViewStyle
     
     var body: some View {
         AsyncImage(
@@ -42,6 +43,23 @@ enum AvatarViewStyle {
         case .large:
             return .init(width: 96, height: 96)
         }
+    }
+}
+
+private struct AvatarViewStyleKey: EnvironmentKey {
+    static let defaultValue: AvatarViewStyle = .small
+}
+
+extension EnvironmentValues {
+    var avatarViewStyle: AvatarViewStyle {
+        get { self[AvatarViewStyleKey.self] }
+        set { self[AvatarViewStyleKey.self] = newValue }
+    }
+}
+
+extension View {
+    func style(_ style: AvatarViewStyle) -> some View {
+        environment(\.avatarViewStyle, style)
     }
 }
 

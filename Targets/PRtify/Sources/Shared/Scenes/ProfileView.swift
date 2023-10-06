@@ -15,7 +15,8 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading) {
                 HStack {
-                    AvatarView(avatarURL: Binding { user.avatarURL } set: { _ in }, style: .large)
+                    AvatarView(avatarURL: Binding { user.avatarURL } set: { _ in })
+                        .style(.large)
                     
                     VStack(alignment: .leading) {
                         Text("\(user.name ?? "Empty Name")")
