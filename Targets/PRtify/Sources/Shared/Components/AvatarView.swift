@@ -58,7 +58,7 @@ extension EnvironmentValues {
 }
 
 extension View {
-    func style(_ style: AvatarViewStyle) -> some View {
+    func avatarViewStyle(_ style: AvatarViewStyle) -> some View {
         environment(\.avatarViewStyle, style)
     }
 }
