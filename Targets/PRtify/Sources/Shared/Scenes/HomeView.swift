@@ -158,4 +158,5 @@ struct HomeView: View, Loggable {
 #Preview {
     HomeView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
         .modelContainer(PRtifyPreviewContainer.self)
+        .environmentObject(PRtifyAppDelegate())
 }
