@@ -28,4 +28,6 @@ struct SettingView: View {
 
 #Preview {
     SettingView()
+        .environmentObject(PRtifyAppDelegate())
+        .environmentObject(Preferences())
 }

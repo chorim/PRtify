@@ -11,6 +11,7 @@ import AuthenticationServices
 
 struct MainView: View, Loggable {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
+    @EnvironmentObject private var preferences: Preferences
     @Environment(\.session) private var session: Session
  
     @KeychainStorage("authToken") private var authToken: Session.AuthToken? = nil
@@ -21,6 +22,7 @@ struct MainView: View, Loggable {
                 HomeView(authToken: $authToken)
                     .environment(\.session, session)
                     .environmentObject(delegate)
+                    .environmentObject(preferences)
                     .tabItem {
                         Group {
                             Image(systemName: "house")
@@ -32,6 +34,7 @@ struct MainView: View, Loggable {
                 
                 SettingView()
                     .environmentObject(delegate)
+                    .environmentObject(preferences)
                     .tabItem {
                         Group {
                             Image(systemName: "gear")
@@ -58,5 +61,6 @@ struct MainView_Previews: PreviewProvider {
     static var previews: some View {
         MainView()
             .environmentObject(PRtifyAppDelegate())
+            .environmentObject(Preferences())
     }
 }

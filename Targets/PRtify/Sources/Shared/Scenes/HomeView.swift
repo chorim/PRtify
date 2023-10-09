@@ -12,6 +12,7 @@ import SwiftUIIntrospect
 
 struct HomeView: View, Loggable {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
+    @EnvironmentObject private var preferences: Preferences
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.session) private var session: Session
@@ -36,10 +37,15 @@ struct HomeView: View, Loggable {
                             emptyView
                         } else {
                             repositoryView
-                                .listRowBackground(Color.flatDarkCardBackground)
+                                .listRowBackground(Color.flatDarkContainerBackground)
                         }
                         
                         Section {
+                            if !repositories.isEmpty {
+                                refreshButton
+                                    .listRowBackground(Color.flatDarkCardBackground)
+                            }
+                            
                             addButton
                                 .listRowBackground(Color.flatDarkCardBackground)
                         }
@@ -74,6 +80,9 @@ struct HomeView: View, Loggable {
                 ProfileView(user: Binding { user } set: { self.user = $0 })
             }
         }
+        .onChange(of: user) { _, new in
+            preferences.user = new
+        }
         .alert(error: $error)
     }
 
@@ -99,6 +108,11 @@ struct HomeView: View, Loggable {
         }
     }
     
+    @Sendable
+    func fetchRepositories() async {
+        logger.info("Called fetchRepositories at \(Date())")
+    }
+    
     // MARK: Views
     @ViewBuilder
     var emptyView: some View {
@@ -117,6 +131,21 @@ struct HomeView: View, Loggable {
             HStack {
                 Spacer()
                 Label("Add", systemImage: "plus")
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var refreshButton: some View {
+        Button {
+            logger.debug("User tapped refresh button: \(Date())")
+
+        } label: {
+            HStack {
+                Spacer()
+                Label("Refresh", systemImage: "arrow.clockwise")
                     .foregroundStyle(.white)
                 Spacer()
             }
@@ -150,6 +179,7 @@ struct HomeView: View, Loggable {
                         .background(Color.flatDarkCardBackground)
                 }
             }
+            .task(fetchRepositories)
         }
         .onDelete(perform: deleteRepository)
     }
@@ -159,4 +189,5 @@ struct HomeView: View, Loggable {
     HomeView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
         .modelContainer(PRtifyPreviewContainer.self)
         .environmentObject(PRtifyAppDelegate())
+        .environmentObject(Preferences())
 }

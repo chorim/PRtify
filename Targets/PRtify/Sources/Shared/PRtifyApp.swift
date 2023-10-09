@@ -23,6 +23,8 @@ struct PRtifyApp: App {
     
     @ApplicationDelegateAdaptor(PRtifyAppDelegate.self) var delegate
 
+    @ObservedObject var preferences: Preferences = .init()
+    
     var session: Session {
         delegate.session
     }
@@ -31,6 +33,7 @@ struct PRtifyApp: App {
         WindowGroup {
             MainView()
                 .environmentObject(delegate)
+                .environmentObject(preferences)
                 .environment(\.session, session)
         }
         .modelContainer(for: Repository.self)

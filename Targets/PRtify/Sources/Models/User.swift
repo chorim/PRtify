@@ -39,6 +39,8 @@ public struct User: Identifiable, Codable {
     }
 }
 
+extension User: Hashable {}
+
 extension User {
     static var mock: Self {
         return User(
