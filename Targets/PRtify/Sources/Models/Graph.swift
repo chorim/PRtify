@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Graph: Codable {
+public struct Graph: Codable {
     let data: Data
     
     enum CodingKeys: String, CodingKey {

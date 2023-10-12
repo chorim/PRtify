@@ -17,4 +17,3 @@ struct CheckSuites: Codable, Hashable {
         case statusCheckRollup
     }
 }
-

@@ -1,5 +1,5 @@
 //
-//  CheckSuitsNodes.swift
+//  Author.swift
 //  PRtify
 //
 //  Created by Insu Byeon on 10/12/23.
@@ -8,10 +8,12 @@
 
 import Foundation
 
-struct CheckSuitsNodes: Codable, Hashable {
-    var nodes: [CheckSuite]
-
+public struct Author: Codable {
+    public let login: String
+    public let avatarURL: URL
+    
     enum CodingKeys: String, CodingKey {
-        case nodes
+        case login
+        case avatarURL = "avatarUrl"
     }
 }

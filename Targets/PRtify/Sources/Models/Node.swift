@@ -17,7 +17,7 @@ struct Node: Codable {
     let deletions: Int?
     let additions: Int?
     let reviews: Review
-    let author: User
+    let author: Author
     let repository: Repository
     let commits: CommitsNodes?
     let labels: Nodes<Label>
@@ -67,4 +67,3 @@ struct Node: Codable {
         }
     }
 }
-
