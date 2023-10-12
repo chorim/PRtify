@@ -47,7 +47,7 @@ public class Session: Loggable {
         return data
     }
 
-    public func authorizeURL(grants scopes: [Scopes]) -> URL {
+    public func authorizeURL(grants scopes: [Scopes]) throws -> URL {
         let authorizeURL = URL(githubAPIWithPath: "login/oauth/authorize", isRoot: true)!
 
         let httpParameters: HTTPParameters = [
@@ -55,9 +55,9 @@ public class Session: Loggable {
             "scope": scopes.map { $0.description }.joined(separator: " ")
         ]
 
-        let urlRequset = URLRequest(url: authorizeURL,
-                                    httpMethod: .get,
-                                    httpParameters: httpParameters)
+        let urlRequset = try URLRequest(url: authorizeURL,
+                                        httpMethod: .get,
+                                        httpParameters: httpParameters)
 
         return urlRequset.url!
     }
@@ -73,9 +73,9 @@ public class Session: Loggable {
             "code": code
         ]
 
-        let urlRequest = URLRequest(url: issueTokenURL,
-                                    httpMethod: .post,
-                                    httpParameters: httpParameters)
+        let urlRequest = try URLRequest(url: issueTokenURL,
+                                        httpMethod: .post,
+                                        httpParameters: httpParameters)
 
         return try await urlSession.data(for: urlRequest, AuthToken.self)
     }
@@ -90,6 +90,21 @@ public class Session: Loggable {
         let urlRequest = URLRequest(url: url)
         
         return try await urlSession.data(for: urlRequest, User.self)
+    }
+    
+    public func fetchPullRequests(field: QuerySearchFieldType) async throws -> Graph {
+        let url = URL(githubAPIWithPath: "graphql")!
+        
+        let httpParameters: HTTPParameters = [
+            "query": QueryGenerator.build(field: field),
+            "variables": []
+        ]
+        
+        let urlRequest = try URLRequest(url: url,
+                                        httpMethod: .post,
+                                        httpParameters: httpParameters)
+        
+        return try await urlSession.data(for: urlRequest, Graph.self)
     }
 
     // MARK: Private
@@ -106,7 +121,10 @@ public extension URLSession {
         fileprivate static var credentialKey: Void?
    }
     
-    static let decoder: JSONDecoder = .init()
+    static let decoder: JSONDecoder = {
+        $0.dateDecodingStrategy = .iso8601
+        return $0
+    }(JSONDecoder())
 
     var credential: SessionCredential? {
         get { objc_getAssociatedObject(self, &AssociatedKey.credentialKey) as? SessionCredential }
