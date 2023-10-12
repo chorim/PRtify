@@ -9,10 +9,12 @@
 import Foundation
 
 extension URLRequest {
+    static let encoder: JSONEncoder = .init()
+    
     public init(url: URL,
                 httpMethod: Session.HTTPMethod,
                 httpParameters: Session.HTTPParameters,
-                httpHeaders: Session.HTTPHeaders = [:]) {
+                httpHeaders: Session.HTTPHeaders = [:]) throws {
         var mutableURL = url
 
         let encoding = URLEncoding()
@@ -30,7 +32,8 @@ extension URLRequest {
         mutableHttpHeaders.forEach { addValue($0.value, forHTTPHeaderField: $0.key) }
 
         if httpMethod == .post || httpMethod == .put {
-            self.httpBody = encoding.query(httpParameters).data(using: .utf8)
+            // self.httpBody = encoding.query(httpParameters).data(using: .utf8)
+            httpBody = try JSONSerialization.data(withJSONObject: httpParameters, options: .prettyPrinted)
         }
     }
 }
