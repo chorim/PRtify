@@ -19,39 +19,63 @@ struct HomeView: View, Loggable {
     
     @Binding var authToken: Session.AuthToken?
     
-    @State private var user: User? = nil
     @State private var error: Error? = nil
     
-    @State private var showingRepositoriesAddView: Bool = false
-    @State private var showingProfileView: Bool = false
+    @State private var createdNodes: [Node] = []
+    @State private var assignedNodes: [Node] = []
+    @State private var requestedNodes: [Node] = []
+
+    @State public var showingRepositoriesAddView: Bool = false
+    @State public var showingProfileView: Bool = false
     
     @Query(sort: [SortDescriptor(\Repository.createdAt, order: .reverse)], animation: .smooth)
-    private var repositories: [Repository]
+    public var repositories: [Repository]
+    
+    private var user: User? {
+        preferences.user
+    }
     
     var body: some View {
         NavigationStack {
             Group {
                 if authToken != nil {
                     List {
-                        if repositories.isEmpty {
-                            emptyView
-                        } else {
-                            repositoryView
+                        if !createdNodes.isEmpty {
+                            Section(header: Text("Created pull requests").foregroundColor(.white)) {
+                                ForEach(createdNodes) { (node: Node) in
+                                    Text("\(node.title)")
+                                        .foregroundColor(.white)
+                                }
                                 .listRowBackground(Color.flatDarkContainerBackground)
+                            }
                         }
                         
-                        Section {
-                            if !repositories.isEmpty {
-                                refreshButton
-                                    .listRowBackground(Color.flatDarkCardBackground)
+                        if !assignedNodes.isEmpty {
+                            Section(header: Text("Assigned pull requests").foregroundColor(.white)) {
+                                ForEach(assignedNodes) { (node: Node) in
+                                    Text("\(node.title)")
+                                        .foregroundColor(.white)
+                                }
+                                .listRowBackground(Color.flatDarkContainerBackground)
                             }
-                            
-                            addButton
-                                .listRowBackground(Color.flatDarkCardBackground)
                         }
+                        
+                        if !requestedNodes.isEmpty {
+                            Section(header: Text("Requested pull requests").foregroundColor(.white)) {
+                                ForEach(requestedNodes) { (node: Node) in
+                                    Text("\(node.title)")
+                                        .foregroundColor(.white)
+                                }
+                                .listRowBackground(Color.flatDarkContainerBackground)
+                            }
+                        }
+                        
+                        // repositorySectionView
+                        // controlSectionView
                     }
                     .scrollContentBackground(.hidden)
                     .task(fetchProfile)
+                    .task(fetchRepositories)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             if let avatarURL = user?.avatarURL {
@@ -76,12 +100,9 @@ struct HomeView: View, Loggable {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
         }
         .sheet(isPresented: $showingProfileView) {
-            if let user {
-                ProfileView(user: Binding { user } set: { self.user = $0 })
+            if let user = preferences.user {
+                ProfileView(user: Binding { user } set: { preferences.user = $0 })
             }
-        }
-        .onChange(of: user) { _, new in
-            preferences.user = new
         }
         .alert(error: $error)
     }
@@ -89,15 +110,15 @@ struct HomeView: View, Loggable {
     @Sendable
     func fetchProfile() async {
         guard !PRtifyApp.isPreview else {
-            self.user = .mock
+            preferences.user = .mock
             return
         }
         
         do {
-            self.user = try await session.fetchProfile()
+            preferences.user = try await session.fetchProfile()
         } catch {
-            self.error = error
             logger.error("fetchProfile() error: \(error.localizedDescription)")
+            self.error = error
         }
     }
     
@@ -110,78 +131,47 @@ struct HomeView: View, Loggable {
     
     @Sendable
     func fetchRepositories() async {
-        logger.info("Called fetchRepositories at \(Date())")
-    }
-    
-    // MARK: Views
-    @ViewBuilder
-    var emptyView: some View {
-        ContentUnavailableView {
-            Label("Empty repository", systemImage: "tray.fill")
-        } description: {
-            Text("New repository you added will be display here.")
-        }
-    }
-    
-    @ViewBuilder
-    var addButton: some View {
-        Button {
-            self.showingRepositoriesAddView = true
-        } label: {
-            HStack {
-                Spacer()
-                Label("Add", systemImage: "plus")
-                    .foregroundStyle(.white)
-                Spacer()
+        logger.info("Call fetchRepositories(all) at \(Date())")
+        
+        do {
+            guard let loginID = user?.login else {
+                logger.debug("User loginID is null. Failed to fetchRepositories.")
+                return
             }
-        }
-    }
-    
-    @ViewBuilder
-    var refreshButton: some View {
-        Button {
-            logger.debug("User tapped refresh button: \(Date())")
-
-        } label: {
-            HStack {
-                Spacer()
-                Label("Refresh", systemImage: "arrow.clockwise")
-                    .foregroundStyle(.white)
-                Spacer()
-            }
-        }
-    }
-    
-    @ViewBuilder
-    var repositoryView: some View {
-        ForEach(repositories) { repository in
-            HStack {
-                Text("\(repository.url.absoluteString)")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                
-                Spacer()
-             
-                switch repository.status {
-                case .connected:
-                    Image(systemName: "checkmark")
-                        .renderingMode(.template)
-                        .foregroundStyle(.green)
-                    
-                case .disconnected:
-                    Image(systemName: "xmark")
-                        .renderingMode(.template)
-                        .foregroundStyle(.red)
-                    
-                case .underlying:
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color.white))
-                        .background(Color.flatDarkCardBackground)
+            
+            let fields: [QuerySearchFieldType] = [
+                .created(username: loginID),
+                .assigned(username: loginID),
+                .requested(username: loginID)
+            ]
+            
+            let nodes = try await withThrowingTaskGroup(of: (QuerySearchFieldType, [Node]).self) { group in
+                for field in fields {
+                    group.addTask {
+                        logger.debug("Waiting for response the fetchPullRequests: \(field)")
+                        let graph = try await session.fetchPullRequests(field: field)
+                        logger.debug("Received the response for TaskGroup: \(field)")
+                        return (field, graph.data.search.edges.map { $0.node })
+                    }
                 }
+                
+                var graphs: [QuerySearchFieldType: [Node]] = [:]
+                
+                for try await (field, node) in group {
+                    graphs[field] = node
+                }
+                
+                return graphs
             }
-            .task(fetchRepositories)
+            
+            self.createdNodes = nodes[.created(username: loginID)] ?? []
+            self.assignedNodes = nodes[.assigned(username: loginID)] ?? []
+            self.requestedNodes = nodes[.requested(username: loginID)] ?? []
+            
+            logger.info("All repositories has been fetched: \(Date())")
+        } catch {
+            logger.error("Failed to fetchRepositories with error: \(error)")
         }
-        .onDelete(perform: deleteRepository)
     }
 }
 
