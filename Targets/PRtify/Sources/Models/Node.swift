@@ -67,3 +67,9 @@ struct Node: Codable {
         }
     }
 }
+
+extension Node: Identifiable {
+    var id: String {
+        [url.absoluteString, repository.name].joined(separator: "-")
+    }
+}

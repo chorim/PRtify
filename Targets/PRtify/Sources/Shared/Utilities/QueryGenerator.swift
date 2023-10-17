@@ -10,6 +10,7 @@ import Foundation
 
 // TODO: QueryGenerator will be replace the apollo client
 public struct QueryGenerator {
+    // swiftlint:disable function_body_length
     static func build(field: QuerySearchFieldType) -> String {
         let attended = """
             commits(last: 1) {
@@ -99,6 +100,21 @@ public enum QuerySearchFieldType: CustomStringConvertible {
             return "is:open is:pr assignee:\(username) archived:false"
         case .requested(let username):
             return "is:open is:pr review-requested:\(username) archived:false"
+        }
+    }
+}
+
+extension QuerySearchFieldType: Hashable {}
+
+extension QuerySearchFieldType: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch self {
+        case .created(let username):
+            return "(created[\(username)])"
+        case .assigned(let username):
+            return "(assigned[\(username)])"
+        case .requested(let username):
+            return "(requested[\(username)])"
         }
     }
 }
