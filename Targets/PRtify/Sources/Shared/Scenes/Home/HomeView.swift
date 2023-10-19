@@ -21,9 +21,9 @@ struct HomeView: View, Loggable {
     
     @State private var error: Error? = nil
     
-    @State private var createdNodes: [Node] = []
-    @State private var assignedNodes: [Node] = []
-    @State private var requestedNodes: [Node] = []
+    @State var createdNodes: HomeNodeState = .loading
+    @State var assignedNodes: HomeNodeState = .loading
+    @State var requestedNodes: HomeNodeState = .loading
 
     @State public var showingRepositoriesAddView: Bool = false
     @State public var showingProfileView: Bool = false
@@ -40,35 +40,9 @@ struct HomeView: View, Loggable {
             Group {
                 if authToken != nil {
                     List {
-                        if !createdNodes.isEmpty {
-                            Section(header: Text("Created pull requests").foregroundColor(.white)) {
-                                ForEach(createdNodes) { (node: Node) in
-                                    Text("\(node.title)")
-                                        .foregroundColor(.white)
-                                }
-                                .listRowBackground(Color.flatDarkContainerBackground)
-                            }
-                        }
-                        
-                        if !assignedNodes.isEmpty {
-                            Section(header: Text("Assigned pull requests").foregroundColor(.white)) {
-                                ForEach(assignedNodes) { (node: Node) in
-                                    Text("\(node.title)")
-                                        .foregroundColor(.white)
-                                }
-                                .listRowBackground(Color.flatDarkContainerBackground)
-                            }
-                        }
-                        
-                        if !requestedNodes.isEmpty {
-                            Section(header: Text("Requested pull requests").foregroundColor(.white)) {
-                                ForEach(requestedNodes) { (node: Node) in
-                                    Text("\(node.title)")
-                                        .foregroundColor(.white)
-                                }
-                                .listRowBackground(Color.flatDarkContainerBackground)
-                            }
-                        }
+                        createdNodesView
+                        assignedNodesView
+                        requestedNodesView
                         
                         // repositorySectionView
                         // controlSectionView
@@ -164,9 +138,14 @@ struct HomeView: View, Loggable {
                 return graphs
             }
             
-            self.createdNodes = nodes[.created(username: loginID)] ?? []
-            self.assignedNodes = nodes[.assigned(username: loginID)] ?? []
-            self.requestedNodes = nodes[.requested(username: loginID)] ?? []
+            let createdNodes: [Node] = nodes[.created(username: loginID)] ?? []
+            self.createdNodes = createdNodes.isEmpty ? .empty : .loaded(createdNodes)
+            
+            let assignedNodes: [Node] = nodes[.assigned(username: loginID)] ?? []
+            self.assignedNodes = assignedNodes.isEmpty ? .empty : .loaded(assignedNodes)
+            
+            let requestedNodes: [Node] = nodes[.requested(username: loginID)] ?? []
+            self.requestedNodes = requestedNodes.isEmpty ? .empty : .loaded(requestedNodes)
             
             logger.info("All repositories has been fetched: \(Date())")
         } catch {

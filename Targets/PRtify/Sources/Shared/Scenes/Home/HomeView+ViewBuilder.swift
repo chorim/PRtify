@@ -13,10 +13,11 @@ extension HomeView {
     @ViewBuilder
     var emptyView: some View {
         ContentUnavailableView {
-            Label("Empty repository", systemImage: "tray.fill")
+            Label("Empty Pull Requests", systemImage: "tray.fill")
         } description: {
-            Text("New repository you added will be display here.")
+            Text("New pull requests will be display here.")
         }
+        .preferredColorScheme(.dark)
     }
     
     @ViewBuilder
@@ -73,13 +74,19 @@ extension HomeView {
                         .foregroundStyle(.red)
                     
                 case .underlying:
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color.white))
-                        .background(Color.flatDarkCardBackground)
+                    progressView
                 }
             }
         }
         .onDelete(perform: deleteRepository)
+    }
+    
+    @ViewBuilder
+    var progressView: some View {
+        ProgressView()
+            .progressViewStyle(CircularProgressViewStyle(tint: Color.white))
+            .background(Color.flatDarkCardBackground)
+            .preferredColorScheme(.dark)
     }
     
     @ViewBuilder
@@ -103,6 +110,81 @@ extension HomeView {
             } else {
                 repositoryView
                     .listRowBackground(Color.flatDarkContainerBackground)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var createdNodesView: some View {
+        Section(header: Text("Created pull requests").foregroundColor(.white)) {
+            
+            switch createdNodes {
+            case .loading:
+                HStack {
+                    Spacer()
+                    progressView
+                    Spacer()
+                }
+                
+            case .loaded(let nodes):
+                ForEach(nodes) { (node: Node) in
+                    Text("\(node.title)")
+                        .foregroundColor(.white)
+                }
+                .listRowBackground(Color.flatDarkContainerBackground)
+                
+            case .empty:
+                emptyView
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var requestedNodesView: some View {
+        Section(header: Text("Requested pull requests").foregroundColor(.white)) {
+            
+            switch requestedNodes {
+            case .loading:
+                HStack {
+                    Spacer()
+                    progressView
+                    Spacer()
+                }
+                
+            case .loaded(let nodes):
+                ForEach(nodes) { (node: Node) in
+                    Text("\(node.title)")
+                        .foregroundColor(.white)
+                }
+                .listRowBackground(Color.flatDarkContainerBackground)
+                
+            case .empty:
+                emptyView
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var assignedNodesView: some View {
+        Section(header: Text("Assigned pull requests").foregroundColor(.white)) {
+            
+            switch assignedNodes {
+            case .loading:
+                HStack {
+                    Spacer()
+                    progressView
+                    Spacer()
+                }
+                
+            case .loaded(let nodes):
+                ForEach(nodes) { (node: Node) in
+                    Text("\(node.title)")
+                        .foregroundColor(.white)
+                }
+                .listRowBackground(Color.flatDarkContainerBackground)
+                
+            case .empty:
+                emptyView
             }
         }
     }
