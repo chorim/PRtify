@@ -128,8 +128,7 @@ extension HomeView {
                 
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
-                    Text("\(node.title)")
-                        .foregroundColor(.white)
+                    PullRequestView(node: node)
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 
@@ -153,8 +152,7 @@ extension HomeView {
                 
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
-                    Text("\(node.title)")
-                        .foregroundColor(.white)
+                    PullRequestView(node: node)
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 
@@ -178,8 +176,7 @@ extension HomeView {
                 
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
-                    Text("\(node.title)")
-                        .foregroundColor(.white)
+                    PullRequestView(node: node)
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 

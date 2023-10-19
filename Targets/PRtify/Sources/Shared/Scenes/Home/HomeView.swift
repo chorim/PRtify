@@ -50,6 +50,11 @@ struct HomeView: View, Loggable {
                     .scrollContentBackground(.hidden)
                     .task(fetchProfile)
                     .task(fetchRepositories)
+                    .refreshable {
+                        Task {
+                            await fetchRepositories()
+                        }
+                    }
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             if let avatarURL = user?.avatarURL {
