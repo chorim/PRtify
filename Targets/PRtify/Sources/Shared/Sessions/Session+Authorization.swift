@@ -14,7 +14,7 @@ public extension Session {
         grants scopes: [Scopes],
         webAuthenticationSessionHandler: @escaping (ASWebAuthenticationSession) -> Void
     ) async throws -> AuthToken {
-        let authorizeURL = authorizeURL(grants: scopes)
+        let authorizeURL = try authorizeURL(grants: scopes)
 
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             webAuthenticationSessionHandler(
