@@ -64,9 +64,11 @@ struct PullRequestView: View {
                 }
                 
                 // repo name
-                HStack(alignment: .center, spacing: 0) {
+                HStack(alignment: .center, spacing: 5) {
                     Label(repositoryName, systemImage: "text.book.closed")
+                        .labelStyle(PRtifyLabel(spacing: 2))
                     Label(authorName, systemImage: "person")
+                        .labelStyle(PRtifyLabel(spacing: 2))
                     Spacer()
                 }
                 .foregroundStyle(.gray)
@@ -74,7 +76,8 @@ struct PullRequestView: View {
                 // diff label
                 HStack(alignment: .center, spacing: 0) {
                     reviewsLabel
-                        .padding(.trailing, 8)
+                        .labelStyle(PRtifyLabel(spacing: 2))
+                        .padding(.trailing, 5)
                     additionsLabel
                     deletionsLabel
                     Spacer()
