@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Pulse
 
 extension Dictionary {
     public static var empty: Self { [:] }
@@ -18,7 +19,10 @@ extension Session {
 }
 
 public class Session: Loggable {
-    public static let shared = Session()
+    public static let shared: Session = {
+        URLSessionProxyDelegate.enableAutomaticRegistration()
+        return Session()
+    }()
 
     public var apiKey: String {
         sessionConfiguration.apiKey
@@ -77,7 +81,7 @@ public class Session: Loggable {
                                         httpMethod: .post,
                                         httpParameters: httpParameters)
 
-        return try await urlSession.data(for: urlRequest, AuthToken.self)
+        return try await urlSession.dataTask(for: urlRequest, AuthToken.self)
     }
     
     public func updateToken(with authToken: AuthToken) {
@@ -89,7 +93,7 @@ public class Session: Loggable {
         
         let urlRequest = URLRequest(url: url)
         
-        return try await urlSession.data(for: urlRequest, User.self)
+        return try await urlSession.dataTask(for: urlRequest, User.self)
     }
     
     public func fetchPullRequests(field: QuerySearchFieldType) async throws -> Graph {
@@ -104,7 +108,7 @@ public class Session: Loggable {
                                         httpMethod: .post,
                                         httpParameters: httpParameters)
         
-        return try await urlSession.data(for: urlRequest, Graph.self)
+        return try await urlSession.dataTask(for: urlRequest, Graph.self)
     }
 
     // MARK: Private
@@ -131,7 +135,26 @@ public extension URLSession {
         set { objc_setAssociatedObject(self, &AssociatedKey.credentialKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
-    func data<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
+    func dataTask<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
+        var dataTask: URLSessionDataTask?
+        
+        let onSuccess: (Data, URLResponse) -> Void = { data, _ in
+            guard let dataTask, let dataDelegate = self.delegate as? URLSessionDataDelegate else {
+                return
+            }
+            dataDelegate.urlSession?(self, dataTask: dataTask, didReceive: data)
+            dataDelegate.urlSession?(self, task: dataTask, didCompleteWithError: nil)
+        }
+        let onError: (Error) -> Void = { error in
+            guard let dataTask, let dataDelegate = self.delegate as? URLSessionDataDelegate else {
+                return
+            }
+            dataDelegate.urlSession?(self, task: dataTask, didCompleteWithError: error)
+        }
+        let onCancel: () -> Void = {
+            dataTask?.cancel()
+        }
+        
         var mutableURLRequest = urlRequest
         
         if let credential {
@@ -143,8 +166,29 @@ public extension URLSession {
             mutableURLRequest.setValue(authorization, forHTTPHeaderField: "Authorization")
         }
         
-        let (data, _) = try await self.data(for: mutableURLRequest)
-        return try Self.decoder.decode(T.self, from: data)
+        return try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation { continuation in
+                dataTask = self.dataTask(with: mutableURLRequest) { data, response, error in
+                    guard let data = data, let response = response else {
+                        let error = error ?? URLError(.badServerResponse)
+                        onError(error)
+                        return continuation.resume(throwing: error)
+                    }
+                    onSuccess(data, response)
+                    
+                    do {
+                        let model = try Self.decoder.decode(T.self, from: data)
+                        return continuation.resume(returning: model)
+                    } catch {
+                        onError(error)
+                        return continuation.resume(throwing: error)
+                    }
+                }
+                dataTask?.resume()
+            }
+        }, onCancel: {
+            onCancel()
+        })
     }
 }
 

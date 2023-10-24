@@ -14,8 +14,6 @@ extension PRtifyAppDelegate: UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        enableAutomaticRegistration()
-        
         return true
     }
     
@@ -32,10 +30,5 @@ extension PRtifyAppDelegate: UIApplicationDelegate {
         navigationController.navigationBar.standardAppearance = navigationBarAppearance
         navigationController.navigationBar.scrollEdgeAppearance = navigationBarAppearance
         navigationController.navigationBar.compactScrollEdgeAppearance = navigationBarAppearance
-    }
-    
-    private func enableAutomaticRegistration() {
-        URLSessionProxyDelegate.enableAutomaticRegistration()
-        logger.info("✅ Pulse automatic registration has been enabled")
     }
 }
