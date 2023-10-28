@@ -16,33 +16,29 @@ struct MainView: View, Loggable {
  
     @KeychainStorage("authToken") private var authToken: Session.AuthToken? = nil
     
+    @State private var selection: Int = 0
+    
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             Group {
                 HomeView(authToken: $authToken)
                     .environment(\.session, session)
                     .environmentObject(delegate)
                     .environmentObject(preferences)
                     .tabItem {
-                        Group {
-                            Image(systemName: "house")
-                                .renderingMode(.template)
-                            Text("Home")
-                        }
-                        .foregroundStyle(Color.white)
+                        Label("Home", systemImage: "house")
+                            .foregroundStyle(Color.white)
                     }
+                    .tag(0)
                 
                 SettingView()
                     .environmentObject(delegate)
                     .environmentObject(preferences)
                     .tabItem {
-                        Group {
-                            Image(systemName: "gear")
-                                .renderingMode(.template)
-                            Text("Settings")
-                        }
-                        .foregroundStyle(Color.white)
+                        Label("Settings", systemImage: "gear")
+                            .foregroundStyle(Color.white)
                     }
+                    .tag(1)
             }
             .toolbarBackground(.visible, for: .tabBar)
             .toolbarBackground(Color.flatDarkBackground, for: .tabBar)
@@ -53,6 +49,8 @@ struct MainView: View, Loggable {
     
     private func updateAuthToken() {
         guard let authToken else { return }
+        logger.debug("Update the auth token")
+        logger.info("The authToken: \(String(describing: authToken))")
         session.updateToken(with: authToken)
     }
 }
