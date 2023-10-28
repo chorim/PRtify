@@ -32,7 +32,7 @@ extension URLRequest {
         mutableHttpHeaders.forEach { addValue($0.value, forHTTPHeaderField: $0.key) }
 
         if httpMethod == .post || httpMethod == .put {
-            // self.httpBody = encoding.query(httpParameters).data(using: .utf8)
+            setValue("application/json", forHTTPHeaderField: "Content-Type")
             httpBody = try JSONSerialization.data(withJSONObject: httpParameters, options: .prettyPrinted)
         }
     }
