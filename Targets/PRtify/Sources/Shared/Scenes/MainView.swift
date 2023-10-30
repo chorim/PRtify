@@ -31,7 +31,7 @@ struct MainView: View, Loggable {
                     }
                     .tag(0)
                 
-                SettingView()
+                SettingView(authToken: $authToken)
                     .environmentObject(delegate)
                     .environmentObject(preferences)
                     .tabItem {
@@ -44,14 +44,32 @@ struct MainView: View, Loggable {
             .toolbarBackground(Color.flatDarkBackground, for: .tabBar)
             .toolbarColorScheme(.dark, for: .tabBar)
         }
-        .onAppear(perform: updateAuthToken)
+        .alert(error: $error)
+        .task(requestAuthorizationForNotification)
+        .task(updateAuthToken)
+        .onChange(of: authToken) { _, newAuthToken in
+            Task {
+                await updateAuthToken()
+            }
+        }
     }
     
-    private func updateAuthToken() {
+    @Sendable
+    private func updateAuthToken() async {
         guard let authToken else { return }
         logger.debug("Update the auth token")
         logger.info("The authToken: \(String(describing: authToken))")
-        session.updateToken(with: authToken)
+        await session.updateToken(with: authToken)
+    }
+    
+    @Sendable
+    private func requestAuthorizationForNotification() async {
+        do {
+            try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
+        } catch {
+            logger.error("requestAuthorizationForNotification error: \(error.localizedDescription)")
+            self.error = error
+        }
     }
 }
 
