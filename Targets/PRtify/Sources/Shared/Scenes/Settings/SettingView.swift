@@ -12,6 +12,8 @@ import SwiftUIIntrospect
 struct SettingView: View {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
     
+    @Binding var authToken: Session.AuthToken?
+    
     @State private var path = NavigationPath()
     @State private var showingNetworkDebugger: Bool = false
     
@@ -22,6 +24,17 @@ struct SettingView: View {
                     Section(header: Text("Profile")) {
                         Text("Username:")
                     }
+                    
+                    if authToken != nil {
+                        Section {
+                            Button {
+                                authToken = nil
+                            } label: {
+                                Text("Sign Out")
+                            }
+                        }
+                    }
+                    
                     #if DEBUG
                     Section(header: Text("DEV")) {
                         Button {
@@ -50,7 +63,7 @@ struct SettingView: View {
 }
 
 #Preview {
-    SettingView()
+    SettingView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
         .environmentObject(PRtifyAppDelegate())
         .environmentObject(Preferences())
 }

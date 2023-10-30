@@ -17,6 +17,7 @@ struct MainView: View, Loggable {
     @KeychainStorage("authToken") private var authToken: Session.AuthToken? = nil
     
     @State private var selection: Int = 0
+    @State private var error: Error? = nil
     
     var body: some View {
         TabView(selection: $selection) {

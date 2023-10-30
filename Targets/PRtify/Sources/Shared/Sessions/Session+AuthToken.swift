@@ -9,13 +9,17 @@
 import Foundation
 
 extension Session {
-    public struct AuthToken: Codable {
+    public struct AuthToken: Codable, CustomDebugStringConvertible, Hashable {
         let accessToken: String
         let tokenType: TokenType
 
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
             case tokenType = "token_type"
+        }
+        
+        public var debugDescription: String {
+            "accessToken: \(accessToken), tokenType: \(tokenType)"
         }
     }
 

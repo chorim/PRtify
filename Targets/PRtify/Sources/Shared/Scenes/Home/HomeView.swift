@@ -106,6 +106,13 @@ struct HomeView: View, Loggable {
             let repository = repositories[index]
             modelContext.delete(repository)
         }
+        
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("An error occurred while calling the save of modelContext: \(error.localizedDescription)")
+            self.error = error
+        }
     }
     
     @Sendable
@@ -113,20 +120,20 @@ struct HomeView: View, Loggable {
         logger.info("Call fetchRepositories(all) at \(Date())")
         
         do {
-            guard let loginID = user?.login else {
-                logger.debug("User loginID is null. Failed to fetchRepositories.")
+            guard let username = user?.login else {
+                logger.debug("Username is null. Failed to fetchRepositories.")
                 return
             }
             
-            let nodes = try await session.fetchPullRequests(by: loginID)
+            let nodes = try await session.fetchPullRequests(by: username)
             
-            let createdNodes: [Node] = nodes[.created(username: loginID)] ?? []
+            let createdNodes: [Node] = nodes[.created(username: username)] ?? []
             self.createdNodes = createdNodes.isEmpty ? .empty : .loaded(createdNodes)
             
-            let assignedNodes: [Node] = nodes[.assigned(username: loginID)] ?? []
+            let assignedNodes: [Node] = nodes[.assigned(username: username)] ?? []
             self.assignedNodes = assignedNodes.isEmpty ? .empty : .loaded(assignedNodes)
             
-            let requestedNodes: [Node] = nodes[.requested(username: loginID)] ?? []
+            let requestedNodes: [Node] = nodes[.requested(username: username)] ?? []
             self.requestedNodes = requestedNodes.isEmpty ? .empty : .loaded(requestedNodes)
             
             logger.info("All repositories has been fetched: \(Date())")

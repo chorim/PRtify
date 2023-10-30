@@ -18,7 +18,7 @@ extension Session {
     public typealias HTTPHeaders = [String: String]
 }
 
-public class Session: Loggable {
+public actor Session: Loggable {
     public static let shared: Session = {
         URLSessionProxyDelegate.enableAutomaticRegistration()
         return Session()
@@ -98,11 +98,11 @@ public class Session: Loggable {
         return try await urlSession.dataTask(for: urlRequest, User.self)
     }
     
-    public func fetchPullRequests(by loginID: String) async throws -> [QuerySearchFieldType: [Node]] {
+    public func fetchPullRequests(by username: String) async throws -> [QuerySearchFieldType: [Node]] {
         let fields: [QuerySearchFieldType] = [
-            .created(username: loginID),
-            .assigned(username: loginID),
-            .requested(username: loginID)
+            .created(username: username),
+            .assigned(username: username),
+            .requested(username: username)
         ]
         
         return try await withThrowingTaskGroup(of: (QuerySearchFieldType, [Node]).self) { group in
