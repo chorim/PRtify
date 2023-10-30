@@ -31,6 +31,8 @@ public class Session: Loggable {
     public var apiSecretKey: String {
         sessionConfiguration.apiSecretKey
     }
+    
+    public lazy var backgroundTaskSchedular: BackgroundTaskScheduler = BackgroundTaskScheduler(session: self)
 
     public init(configuration: SessionConfiguration = .default) {
         self.sessionConfiguration = configuration
@@ -96,7 +98,40 @@ public class Session: Loggable {
         return try await urlSession.dataTask(for: urlRequest, User.self)
     }
     
-    public func fetchPullRequests(field: QuerySearchFieldType) async throws -> Graph {
+    public func fetchPullRequests(by loginID: String) async throws -> [QuerySearchFieldType: [Node]] {
+        let fields: [QuerySearchFieldType] = [
+            .created(username: loginID),
+            .assigned(username: loginID),
+            .requested(username: loginID)
+        ]
+        
+        return try await withThrowingTaskGroup(of: (QuerySearchFieldType, [Node]).self) { group in
+            for field in fields {
+                group.addTask {
+                    self.logger.debug("Waiting for response the fetchPullRequests: \(field)")
+                    let graph = try await self._fetchPullRequests(field: field)
+                    self.logger.debug("Received the response for TaskGroup: \(field)")
+                    return (field, graph.data.search.edges.map { $0.node })
+                }
+            }
+            
+            var graphs: [QuerySearchFieldType: [Node]] = [:]
+            
+            for try await (field, node) in group {
+                graphs[field] = node
+            }
+            
+            return graphs
+        }
+    }
+    
+    // MARK: Private
+    private let sessionConfiguration: SessionConfiguration
+    private let urlSession: URLSession
+}
+
+private extension Session {
+    func _fetchPullRequests(field: QuerySearchFieldType) async throws -> Graph {
         let url = URL(githubAPIWithPath: "graphql")!
         
         let httpParameters: HTTPParameters = [
@@ -110,10 +145,6 @@ public class Session: Loggable {
         
         return try await urlSession.dataTask(for: urlRequest, Graph.self)
     }
-
-    // MARK: Private
-    private let sessionConfiguration: SessionConfiguration
-    private let urlSession: URLSession
 }
 
 public struct SessionCredential {

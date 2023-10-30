@@ -118,30 +118,7 @@ struct HomeView: View, Loggable {
                 return
             }
             
-            let fields: [QuerySearchFieldType] = [
-                .created(username: loginID),
-                .assigned(username: loginID),
-                .requested(username: loginID)
-            ]
-            
-            let nodes = try await withThrowingTaskGroup(of: (QuerySearchFieldType, [Node]).self) { group in
-                for field in fields {
-                    group.addTask {
-                        logger.debug("Waiting for response the fetchPullRequests: \(field)")
-                        let graph = try await session.fetchPullRequests(field: field)
-                        logger.debug("Received the response for TaskGroup: \(field)")
-                        return (field, graph.data.search.edges.map { $0.node })
-                    }
-                }
-                
-                var graphs: [QuerySearchFieldType: [Node]] = [:]
-                
-                for try await (field, node) in group {
-                    graphs[field] = node
-                }
-                
-                return graphs
-            }
+            let nodes = try await session.fetchPullRequests(by: loginID)
             
             let createdNodes: [Node] = nodes[.created(username: loginID)] ?? []
             self.createdNodes = createdNodes.isEmpty ? .empty : .loaded(createdNodes)
