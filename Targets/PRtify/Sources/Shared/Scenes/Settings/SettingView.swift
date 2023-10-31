@@ -11,26 +11,44 @@ import SwiftUIIntrospect
 
 struct SettingView: View {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
+    @EnvironmentObject private var preferences: Preferences
     
     @Binding var authToken: Session.AuthToken?
     
     @State private var path = NavigationPath()
     @State private var showingNetworkDebugger: Bool = false
+    @State private var showingWebView: Bool = false
+    
+    private var user: User? {
+        preferences.user
+    }
     
     var body: some View {
         NavigationStack {
             Group {
                 List {
-                    Section(header: Text("Profile")) {
-                        Text("Username:")
-                    }
-                    
-                    if authToken != nil {
+                    if let user = user, authToken != nil {
+                        Section(header: Text("Profile")) {
+                            HStack(spacing: 10) {
+                                AvatarView(avatarURL: user.avatarURL)
+                                    .avatarViewStyle(.small)
+                                
+                                Text("\(user.name ?? "") (@\(user.login))")
+                            }
+                            
+                            Button {
+                                showingWebView = true
+                            } label: {
+                                Text("Open My Profile")
+                            }
+                        }
+                        
                         Section {
                             Button {
                                 authToken = nil
                             } label: {
                                 Text("Sign Out")
+                                    .foregroundStyle(.red)
                             }
                         }
                     }
@@ -57,6 +75,12 @@ struct SettingView: View {
         }
         .sheet(isPresented: $showingNetworkDebugger) {
             PulseView()
+        }
+        .fullScreenCover(isPresented: $showingWebView) {
+            if let htmlURL = user?.htmlURL {
+                SafariWebView(url: htmlURL)
+                    .ignoresSafeArea()
+            }
         }
         .preferredColorScheme(.dark)
     }

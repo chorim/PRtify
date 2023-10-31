@@ -51,7 +51,7 @@ struct PullRequestView: View {
     
     var body: some View {
         HStack {
-            AvatarView(avatarURL: Binding { avatarURL } set: { _ in })
+            AvatarView(avatarURL: avatarURL)
             
             VStack(alignment: .leading, spacing: 5) {
                 // pr name

@@ -22,6 +22,7 @@ public struct User: Identifiable, Codable {
     public let bio: String?
     public let followers: Int
     public let following: Int
+    public let htmlURL: URL
     
     public enum CodingKeys: String, CodingKey {
         case id
@@ -36,6 +37,7 @@ public struct User: Identifiable, Codable {
         case bio
         case followers
         case following
+        case htmlURL = "html_url"
     }
 }
 
@@ -55,7 +57,8 @@ extension User {
             email: "me@byeon.is",
             bio: "iOS Developer",
             followers: 44,
-            following: 43
+            following: 43,
+            htmlURL: URL(string: "https://github.com/chorim")!
         )
     }
 }

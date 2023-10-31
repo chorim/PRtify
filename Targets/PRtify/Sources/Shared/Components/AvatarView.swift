@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 struct AvatarView: View {
-    @Binding var avatarURL: URL
+    var avatarURL: URL
     
     @Environment(\.avatarViewStyle)
     var style: AvatarViewStyle
@@ -64,5 +64,5 @@ extension View {
 }
 
 #Preview {
-    AvatarView(avatarURL: .constant(User.mock.avatarURL))
+    AvatarView(avatarURL: User.mock.avatarURL)
 }

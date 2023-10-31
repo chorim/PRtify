@@ -17,7 +17,7 @@ struct ProfileView: View {
             ScrollView {
                 VStack(alignment: .leading) {
                     HStack {
-                        AvatarView(avatarURL: Binding { user.avatarURL } set: { _ in })
+                        AvatarView(avatarURL: user.avatarURL)
                             .avatarViewStyle(.large)
                         
                         VStack(alignment: .leading) {

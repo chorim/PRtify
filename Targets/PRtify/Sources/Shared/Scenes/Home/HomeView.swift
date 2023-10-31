@@ -58,7 +58,7 @@ struct HomeView: View, Loggable {
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             if let avatarURL = user?.avatarURL {
-                                AvatarView(avatarURL: Binding { avatarURL } set: { _ in })
+                                AvatarView(avatarURL: avatarURL)
                                     .onTapGesture {
                                         self.showingProfileView = true
                                     }
