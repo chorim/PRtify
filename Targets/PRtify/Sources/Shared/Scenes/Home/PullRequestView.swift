@@ -94,7 +94,7 @@ struct PullRequestView: View {
 }
 
 fileprivate extension Node {
-    static var mock: Self {
+    static var mock: Node {
         let data = """
             {
                 "number": 1981,
