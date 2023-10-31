@@ -14,6 +14,7 @@ struct SettingView: View {
     @EnvironmentObject private var preferences: Preferences
     
     @Binding var authToken: Session.AuthToken?
+    @Binding var selection: Int
     
     @State private var path = NavigationPath()
     @State private var showingNetworkDebugger: Bool = false
@@ -47,8 +48,17 @@ struct SettingView: View {
                             Button {
                                 authToken = nil
                             } label: {
-                                Text("Sign Out")
+                                Text("Sync out")
                                     .foregroundStyle(.red)
+                            }
+                        }
+                    } else {
+                        Section(header: Text("Profile")) {
+                            Button {
+                                selection = 0
+                            } label: {
+                                Text("Sync in")
+                                    .foregroundStyle(.blue)
                             }
                         }
                     }
@@ -87,7 +97,7 @@ struct SettingView: View {
 }
 
 #Preview {
-    SettingView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)))
+    SettingView(authToken: .constant(.init(accessToken: "1", tokenType: .bearer)), selection: .constant(1))
         .environmentObject(PRtifyAppDelegate())
         .environmentObject(Preferences())
 }
