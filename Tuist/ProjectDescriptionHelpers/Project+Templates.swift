@@ -56,21 +56,13 @@ extension Project {
     /// Helper function to create the application target and the unit test target.
     private static func makeAppTargets(name: String, platform: Platform, dependencies: [TargetDependency]) -> [Target] {
         let platform: Platform = platform
-        let infoPlist: [String: InfoPlist.Value] = [
-            "CFBundleShortVersionString": "1.0",
-            "CFBundleVersion": "1",
-            "UIMainStoryboardFile": "",
-            "UILaunchStoryboardName": "LaunchScreen",
-            "GITHUB_API_KEY": "$(GITHUB_API_KEY)",
-            "GITHUB_API_SECRET": "$(GITHUB_API_SECRET)"
-        ]
 
         let mainTarget = Target(
             name: name,
             platform: platform,
             product: .app,
             bundleId: "\(organizationName).\(name)",
-            infoPlist: .extendingDefault(with: infoPlist),
+            infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(name).plist")),
             sources: ["Targets/\(name)/Sources/**"],
             resources: ["Targets/\(name)/Resources/**"],
             scripts: [.pre(path: .relativeToRoot("scripts/lint.sh"), name: "SwiftLint")],
