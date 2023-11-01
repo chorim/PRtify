@@ -48,8 +48,10 @@ struct HomeView: View, Loggable {
                         // controlSectionView
                     }
                     .scrollContentBackground(.hidden)
-                    .task(fetchProfile)
-                    .task(fetchRepositories)
+                    .task {
+                        await fetchProfile()
+                        await fetchRepositories()
+                    }
                     .refreshable {
                         Task {
                             await fetchRepositories()
@@ -139,6 +141,7 @@ struct HomeView: View, Loggable {
             logger.info("All repositories has been fetched: \(Date())")
         } catch {
             logger.error("Failed to fetchRepositories with error: \(error)")
+            self.error = error
         }
     }
 }
