@@ -9,6 +9,7 @@
 import Foundation
 import BackgroundTasks
 import UserNotifications
+import SwiftUI
 
 public class BackgroundTaskScheduler: Loggable {
     private unowned let session: Session
@@ -37,7 +38,7 @@ public class BackgroundTaskScheduler: Loggable {
     
     static var preferredBackgroundTasksTimeInterval: TimeInterval {
         #if DEBUG
-        60 // Fetch no earlier than 1 minute from now
+        60
         #else
         (16 / 2) * 60 // Fetch no earlier than 8 minutes from now
         #endif
@@ -80,49 +81,71 @@ public class BackgroundTaskScheduler: Loggable {
     }
     
     func invalidate() {
+        BGTaskScheduler.shared.getPendingTaskRequests { all in
+            self.logger.notice("Pending Tasks Requests: \(String(describing: all))")
+        }
+
         backgroundTimer = nil
         BGTaskScheduler.shared.cancelAllTaskRequests()
         logger.notice("[[BGTaskScheduler sharedScheduler] cancelAllTaskRequests] has been called")
     }
 }
 
-extension BackgroundTaskScheduler {
-    func scheduleAppRefresh() throws {
-        logger.debug("Requesting the BGAppRefreshTaskRequest for: \(Self.backgroundRefreshBackgroundTaskIdentifier)")
-        let request = BGAppRefreshTaskRequest(identifier: Self.backgroundRefreshBackgroundTaskIdentifier)
-        request.earliestBeginDate = Self.preferredBackgroundRefreshDate
-        try BGTaskScheduler.shared.submit(request)
-        
-        // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
-        logger.debug("Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)")
+public extension BackgroundTaskScheduler {
+    func scheduleAppRefresh(by username: String, using phase: ScenePhase) throws {
+        switch phase {
+        case .active, .inactive:
+            invalidate()
+            
+        case .background:
+            logger.debug("Requesting the BGAppRefreshTaskRequest for: \(Self.backgroundRefreshBackgroundTaskIdentifier)")
+            let request = BGAppRefreshTaskRequest(identifier: Self.backgroundRefreshBackgroundTaskIdentifier)
+            request.earliestBeginDate = Self.preferredBackgroundRefreshDate
+            try BGTaskScheduler.shared.submit(request)
+            
+            // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
+            logger.debug("Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)")
+            
+            #if DEBUG
+            Task {
+                let content = UNMutableNotificationContent()
+                content.title = "[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!"
+                content.subtitle = "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)"
+                let notificationRequest = UNNotificationRequest(
+                    identifier: UUID().uuidString,
+                    content: content,
+                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+                )
+                try await UNUserNotificationCenter.current().add(notificationRequest)
+            }
+            #endif
+            
+        @unknown default:
+            logger.critical("Unknown ScenePhase: \(String(describing: phase))")
+            fatalError("Unknown ScenePhase: \(String(describing: phase))")
+        }
     }
     
     @discardableResult
     func backgroundRefresh(by username: String) async -> Bool {
-        logger.notice("Start the backgroundRefresh")
-        
-        defer {
-            logger.notice("End the backgroundRefresh")
-        }
-        
         backgroundTimer = newBackgroundTimer(by: username)
         
-        #if DEBUG
         do {
+            #if DEBUG
             let content = UNMutableNotificationContent()
-            content.title = "[DEV] New background timer added!"
-            content.subtitle = "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)"
+            content.title = "[DEV] New pull request from background task!"
+            content.subtitle = "Check it now!"
             let request = UNNotificationRequest(
                 identifier: UUID().uuidString,
                 content: content,
                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
             )
             try await UNUserNotificationCenter.current().add(request)
+            #endif
         } catch {
-            logger.error("Error adding notification content from background refresh: \(error.localizedDescription)")
+            logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
         }
-        #endif
-        
+
         return true
     }
 }

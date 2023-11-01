@@ -38,28 +38,25 @@ struct PRtifyApp: App, Loggable {
                 .environment(\.session, session)
         }
         .onChange(of: phase) { _, newPhase in
-            switch newPhase {
-            case .background:
-                Task {
-                    do {
-                        try await session.backgroundTaskSchedular.scheduleAppRefresh()
-                    } catch {
-                        logger.error("Couldn't schedule app refresh: \(error)")
-                    }
+            logger.info("PRtify has entered an app phase: \(String(describing: newPhase))")
+            
+            Task {
+                guard let username = preferences.user?.login, await session.credential != nil else {
+                    logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
+                    return
                 }
-                
-            case .active, .inactive:
-                Task {
-                    await session.backgroundTaskSchedular.invalidate()
-                }
-                
-            default:
-                break
+                try await session.backgroundTaskSchedular.scheduleAppRefresh(by: username, using: newPhase)
             }
         }
         .backgroundTask(.appRefresh(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)) {
-            guard let username = await preferences.user?.login else {
-                logger.warning("Unauthorized user.")
+            logger.notice("Start the backgroundRefresh")
+            
+            defer {
+                logger.notice("Finish the backgroundRefresh")
+            }
+            
+            guard let username = await preferences.user?.login, await session.credential != nil else {
+                logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
                 return
             }
             

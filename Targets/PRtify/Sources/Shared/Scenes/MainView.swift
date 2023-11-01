@@ -48,7 +48,7 @@ struct MainView: View, Loggable {
         .alert(error: $error)
         .task(requestAuthorizationForNotification)
         .task(updateAuthToken)
-        .onChange(of: authToken) { _, newAuthToken in
+        .onChange(of: authToken) { _, _ in
             Task {
                 await updateAuthToken()
             }
