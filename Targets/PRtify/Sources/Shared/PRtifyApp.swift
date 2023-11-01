@@ -41,7 +41,7 @@ struct PRtifyApp: App, Loggable {
             logger.info("PRtify has entered an app phase: \(String(describing: newPhase))")
             
             Task {
-                guard let username = preferences.user?.login, await session.credential != nil else {
+                guard let username = preferences.user?.login else {
                     logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
                     return
                 }
