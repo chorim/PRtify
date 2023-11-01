@@ -32,25 +32,15 @@ public actor Session: Loggable {
         sessionConfiguration.apiSecretKey
     }
     
+    public var credential: SessionCredential? {
+        urlSession.credential
+    }
+    
     public lazy var backgroundTaskSchedular: BackgroundTaskScheduler = BackgroundTaskScheduler(session: self)
 
     public init(configuration: SessionConfiguration = .default) {
         self.sessionConfiguration = configuration
         self.urlSession = URLSession(configuration: configuration.sessionConfiguration)
-    }
-
-    public func data(for request: URLRequest) async throws -> Data {
-        let (data, response) = try await urlSession.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw SessionError.invalidResponse
-        }
-
-        guard (200..<300).contains(httpResponse.statusCode) else {
-            throw SessionError.invalidStatusCode
-        }
-
-        return data
     }
 
     public func authorizeURL(grants scopes: [Scopes]) throws -> URL {
@@ -200,6 +190,16 @@ public extension URLSession {
         return try await withTaskCancellationHandler(operation: {
             try await withCheckedThrowingContinuation { continuation in
                 dataTask = self.dataTask(with: mutableURLRequest) { data, response, error in
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        onError(SessionError.invalidResponse)
+                        return continuation.resume(throwing: SessionError.invalidResponse)
+                    }
+
+                    guard (200..<300).contains(httpResponse.statusCode) else {
+                        onError(SessionError.invalidStatusCode)
+                        return continuation.resume(throwing: SessionError.invalidStatusCode)
+                    }
+                    
                     guard let data = data, let response = response else {
                         let error = error ?? URLError(.badServerResponse)
                         onError(error)
@@ -240,6 +240,7 @@ public extension URLSessionConfiguration {
             return httpAdditionalHeaders
         }()
 
+        configuration.shouldUseExtendedBackgroundIdleMode = true
         configuration.timeoutIntervalForRequest = 10
 
         return configuration
