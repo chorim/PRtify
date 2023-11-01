@@ -7,22 +7,78 @@
 //
 
 import Foundation
+import SwiftData
 
-struct Node: Codable {
-    let url: URL
-    let updatedAt: Date
-    let createdAt: Date
-    let title: String
-    let number: Int
-    let deletions: Int?
-    let additions: Int?
-    let reviews: Review
-    let author: Author
-    let repository: Repository
-    let commits: CommitsNodes?
-    let labels: Nodes<Label>
-    let isDraft: Bool
-    let isReadByViewer: Bool
+// @Model
+public class Node: Codable {
+    var url: URL
+    var updatedAt: Date
+    var createdAt: Date
+    var title: String
+    var number: Int
+    var deletions: Int?
+    var additions: Int?
+    var reviews: Review
+    var author: Author
+    var repository: Repository
+    var commits: CommitsNodes?
+    var labels: Nodes<Label>
+    var isDraft: Bool
+    var isReadByViewer: Bool
+    
+    // swiftlint:disable line_length
+    init(url: URL, updatedAt: Date, createdAt: Date, title: String, number: Int, deletions: Int?, additions: Int?, reviews: Review, author: Author, repository: Repository, commits: CommitsNodes?, labels: Nodes<Label>, isDraft: Bool, isReadByViewer: Bool) {
+        self.url = url
+        self.updatedAt = updatedAt
+        self.createdAt = createdAt
+        self.title = title
+        self.number = number
+        self.deletions = deletions
+        self.additions = additions
+        self.reviews = reviews
+        self.author = author
+        self.repository = repository
+        self.commits = commits
+        self.labels = labels
+        self.isDraft = isDraft
+        self.isReadByViewer = isReadByViewer
+    }
+    
+    required public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        url = try container.decode(URL.self, forKey: .url)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        title = try container.decode(String.self, forKey: .title)
+        number = try container.decode(Int.self, forKey: .number)
+        deletions = try container.decodeIfPresent(Int.self, forKey: .deletions)
+        additions = try container.decodeIfPresent(Int.self, forKey: .additions)
+        reviews = try container.decode(Review.self, forKey: .reviews)
+        author = try container.decode(Author.self, forKey: .author)
+        repository = try container.decode(Repository.self, forKey: .repository)
+        commits = try container.decodeIfPresent(CommitsNodes.self, forKey: .commits)
+        labels = try container.decode(Nodes<Label>.self, forKey: .labels)
+        isDraft = try container.decode(Bool.self, forKey: .isDraft)
+        isReadByViewer = try container.decode(Bool.self, forKey: .isReadByViewer)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(url, forKey: .url)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(title, forKey: .title)
+        try container.encode(number, forKey: .number)
+        try container.encodeIfPresent(deletions, forKey: .deletions)
+        try container.encodeIfPresent(additions, forKey: .additions)
+        try container.encode(reviews, forKey: .reviews)
+        try container.encode(author, forKey: .author)
+        try container.encode(repository, forKey: .repository)
+        try container.encodeIfPresent(commits, forKey: .commits)
+        try container.encode(labels, forKey: .labels)
+        try container.encode(isDraft, forKey: .isDraft)
+        try container.encode(isReadByViewer, forKey: .isReadByViewer)
+    }
     
     enum CodingKeys: String, CodingKey {
         case url
@@ -69,7 +125,7 @@ struct Node: Codable {
 }
 
 extension Node: Identifiable {
-    var id: String {
+    public var id: String {
         [url.absoluteString, repository.name].joined(separator: "-")
     }
 }
