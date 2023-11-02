@@ -9,16 +9,18 @@ extension Project {
     /// Helper function to create the Project for this ExampleApp
     public static func app(
         name: String,
-        platform: Platform,
+        platforms: [Platform],
         additionalTargets: [String],
         additionalDependencies: [TargetDependency]
     ) -> Project {
-        var targets = makeAppTargets(
-            name: name,
-            platform: platform,
-            dependencies: additionalTargets.map { TargetDependency.target(name: $0) } + additionalDependencies
-        )
-        targets += additionalTargets.flatMap({ makeFrameworkTargets(name: $0, platform: platform) })
+        var targets: [Target] = []
+        for platform in platforms {
+            targets += makeAppTargets(
+                name: name,
+                platform: platform,
+                dependencies: additionalTargets.map { TargetDependency.target(name: $0) } + additionalDependencies
+            )
+        }
         let configurations: [Configuration] = [
             .debug(name: "Debug", settings: [:], xcconfig: .relativeToRoot("Configs/Debug.xcconfig")),
             .release(name: "Release", settings: [:], xcconfig: .relativeToRoot("Configs/Release.xcconfig"))
@@ -56,11 +58,14 @@ extension Project {
     /// Helper function to create the application target and the unit test target.
     private static func makeAppTargets(name: String, platform: Platform, dependencies: [TargetDependency]) -> [Target] {
         let platform: Platform = platform
-
+        let platformDisplayName: String = platform.rawValue.replacingOccurrences(of: "os", with: "OS")
+        
+        let targetName: String = "\(name) (\(platformDisplayName))"
         let mainTarget = Target(
-            name: name,
+            name: targetName,
             platform: platform,
             product: .app,
+            productName: name,
             bundleId: "\(organizationName).\(name)",
             infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(name).plist")),
             sources: ["Targets/\(name)/Sources/**"],
@@ -70,14 +75,15 @@ extension Project {
         )
 
         let testTarget = Target(
-            name: "\(name)Tests",
+            name: "\(targetName)Tests",
             platform: platform,
             product: .unitTests,
+            productName: "\(name)Tests",
             bundleId: "\(organizationName).\(name)Tests",
             infoPlist: .default,
             sources: ["Targets/\(name)/Tests/**"],
             dependencies: [
-                .target(name: "\(name)")
+                .target(name: targetName)
             ])
         return [mainTarget, testTarget]
     }
