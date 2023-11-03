@@ -57,6 +57,7 @@ struct HomeView: View, Loggable {
                             await fetchRepositories()
                         }
                     }
+                    #if os(iOS)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             if let avatarURL = user?.avatarURL {
@@ -67,6 +68,7 @@ struct HomeView: View, Loggable {
                             }
                         }
                     }
+                    #endif
                 } else {
                     SignInView(authToken: $authToken)
                 }
@@ -74,9 +76,11 @@ struct HomeView: View, Loggable {
             .background(Color.flatDarkBackground)
             .navigationTitle("Home")
         }
+        #if os(iOS)
         .introspect(.navigationStack, on: .iOS(.v16, .v17)) {
             delegate.configureNavigationBar($0)
         }
+        #endif
         .sheet(isPresented: $showingRepositoriesAddView) {
             RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
         }

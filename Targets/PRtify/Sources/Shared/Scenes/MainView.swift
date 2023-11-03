@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AuthenticationServices
+import UserNotifications
 
 struct MainView: View, Loggable {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
@@ -41,9 +42,11 @@ struct MainView: View, Loggable {
                     }
                     .tag(1)
             }
+            #if os(iOS)
             .toolbarBackground(.visible, for: .tabBar)
             .toolbarBackground(Color.flatDarkBackground, for: .tabBar)
             .toolbarColorScheme(.dark, for: .tabBar)
+            #endif
         }
         .alert(error: $error)
         .task(requestAuthorizationForNotification)

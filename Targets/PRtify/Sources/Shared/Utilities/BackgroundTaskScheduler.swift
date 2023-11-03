@@ -7,7 +7,9 @@
 //
 
 import Foundation
+#if os(iOS)
 import BackgroundTasks
+#endif
 import UserNotifications
 import SwiftUI
 
@@ -57,7 +59,7 @@ public class BackgroundTaskScheduler: Loggable {
                     #if DEBUG
                     let content = UNMutableNotificationContent()
                     content.title = "[DEV] New pull request from background task!"
-                    content.subtitle = "Check it now!"
+                    content.subtitle = "1 Check it now!"
                     let request = UNNotificationRequest(
                         identifier: UUID().uuidString,
                         content: content,
@@ -81,12 +83,15 @@ public class BackgroundTaskScheduler: Loggable {
     }
     
     func invalidate() {
+        #if os(iOS)
         BGTaskScheduler.shared.getPendingTaskRequests { all in
             self.logger.notice("Pending Tasks Requests: \(String(describing: all))")
         }
-
+        #endif
         backgroundTimer = nil
+        #if os(iOS)
         BGTaskScheduler.shared.cancelAllTaskRequests()
+        #endif
         logger.notice("[[BGTaskScheduler sharedScheduler] cancelAllTaskRequests] has been called")
     }
 }
@@ -98,13 +103,18 @@ public extension BackgroundTaskScheduler {
             invalidate()
             
         case .background:
+            backgroundTimer = newBackgroundTimer(by: username)
+            
+            #if os(iOS)
             logger.debug("Requesting the BGAppRefreshTaskRequest for: \(Self.backgroundRefreshBackgroundTaskIdentifier)")
+            
             let request = BGAppRefreshTaskRequest(identifier: Self.backgroundRefreshBackgroundTaskIdentifier)
             request.earliestBeginDate = Self.preferredBackgroundRefreshDate
             try BGTaskScheduler.shared.submit(request)
             
             // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
             logger.debug("Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)")
+            #endif
             
             #if DEBUG
             Task {
@@ -131,10 +141,11 @@ public extension BackgroundTaskScheduler {
         backgroundTimer = newBackgroundTimer(by: username)
         
         do {
+            try scheduleAppRefresh(by: username, using: .background)
             #if DEBUG
             let content = UNMutableNotificationContent()
             content.title = "[DEV] New pull request from background task!"
-            content.subtitle = "Check it now!"
+            content.subtitle = "0 Check it now!"
             let request = UNNotificationRequest(
                 identifier: UUID().uuidString,
                 content: content,
@@ -144,6 +155,7 @@ public extension BackgroundTaskScheduler {
             #endif
         } catch {
             logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
+            return false
         }
 
         return true

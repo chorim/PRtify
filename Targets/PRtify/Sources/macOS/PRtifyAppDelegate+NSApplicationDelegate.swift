@@ -8,6 +8,7 @@
 
 #if os(macOS)
 import AppKit
+import UserNotifications
 
 extension PRtifyAppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {

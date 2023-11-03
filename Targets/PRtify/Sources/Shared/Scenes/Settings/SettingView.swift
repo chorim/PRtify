@@ -79,19 +79,23 @@ struct SettingView: View {
             }
             .background(Color.flatDarkBackground)
             .navigationTitle("Settings")
-            .introspect(.navigationStack, on: .iOS(.v16, .v17)) { 
+            #if os(iOS)
+            .introspect(.navigationStack, on: .iOS(.v16, .v17)) {
                 delegate.configureNavigationBar($0)
             }
+            #endif
         }
         .sheet(isPresented: $showingNetworkDebugger) {
             PulseView()
         }
+        #if os(iOS)
         .fullScreenCover(isPresented: $showingWebView) {
             if let htmlURL = user?.htmlURL {
                 SafariWebView(url: htmlURL)
                     .ignoresSafeArea()
             }
         }
+        #endif
         .preferredColorScheme(.dark)
     }
 }

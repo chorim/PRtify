@@ -48,6 +48,7 @@ struct PRtifyApp: App, Loggable {
                 try await session.backgroundTaskSchedular.scheduleAppRefresh(by: username, using: newPhase)
             }
         }
+        #if os(iOS)
         .backgroundTask(.appRefresh(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)) {
             logger.notice("Start the backgroundRefresh")
             
@@ -62,6 +63,7 @@ struct PRtifyApp: App, Loggable {
             
             await session.backgroundTaskSchedular.backgroundRefresh(by: username)
         }
+        #endif
         .modelContainer(for: Repository.self)
     }
 }
