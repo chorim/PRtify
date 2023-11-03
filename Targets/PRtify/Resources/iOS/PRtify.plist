@@ -5,7 +5,6 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>is.byeon.PRtify.background-refresh</string>
-		<string>is.byeon.PRtify.data-cleansing</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
@@ -40,8 +39,11 @@
 	<array>
 		<string>fetch</string>
 	</array>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UINavigationBar</key>
+		<dict/>
+	</dict>
 	<key>UIMainStoryboardFile</key>
 	<string></string>
 	<key>UIRequiredDeviceCapabilities</key>

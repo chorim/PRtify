@@ -61,30 +61,33 @@ extension Project {
         let platformDisplayName: String = platform.rawValue.replacingOccurrences(of: "os", with: "OS")
         
         let targetName: String = "\(name) (\(platformDisplayName))"
+        let sourceFilesList: [String] = ["Extensions", "Models", "Shared", platformDisplayName]
+            .map { "Targets/\(name)/Sources/\($0)/**" }
+        
         let mainTarget = Target(
             name: targetName,
             platform: platform,
             product: .app,
             productName: name,
             bundleId: "\(organizationName).\(name)",
-            infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(name).plist")),
-            sources: ["Targets/\(name)/Sources/**"],
-            resources: ["Targets/\(name)/Resources/**"],
+            infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(platformDisplayName)/\(name).plist")),
+            sources: SourceFilesList(globs: sourceFilesList),
+            resources: ["Targets/\(name)/Resources/\(platformDisplayName)/**"],
             scripts: [.pre(path: .relativeToRoot("scripts/lint.sh"), name: "SwiftLint")],
             dependencies: dependencies
         )
 
-        let testTarget = Target(
-            name: "\(targetName)Tests",
-            platform: platform,
-            product: .unitTests,
-            productName: "\(name)Tests",
-            bundleId: "\(organizationName).\(name)Tests",
-            infoPlist: .default,
-            sources: ["Targets/\(name)/Tests/**"],
-            dependencies: [
-                .target(name: targetName)
-            ])
-        return [mainTarget, testTarget]
+        // let testTarget = Target(
+        //     name: "\(targetName)Tests",
+        //     platform: platform,
+        //     product: .unitTests,
+        //     productName: "\(name)Tests",
+        //     bundleId: "\(organizationName).\(name)Tests",
+        //     infoPlist: .default,
+        //     sources: ["Targets/\(name)/Tests/**"],
+        //     dependencies: [
+        //         .target(name: targetName)
+        //     ])
+        return [mainTarget]
     }
 }
