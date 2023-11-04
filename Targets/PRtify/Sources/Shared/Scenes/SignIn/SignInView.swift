@@ -27,6 +27,7 @@ struct SignInView: View, Loggable {
                     .background(Color.black)
                     .foregroundColor(Color.white)
                     .clipShape(RoundedRectangle(cornerSize: .init(width: 12, height: 12)))
+                    .buttonStyle(.plain)
                 
                 if let webAuthenticationSession {
                     WebAuthenticationView(webAuthenticationSession: webAuthenticationSession)
