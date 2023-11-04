@@ -61,7 +61,7 @@ extension Project {
         let platformDisplayName: String = platform.rawValue.replacingOccurrences(of: "os", with: "OS")
         
         let targetName: String = "\(name) (\(platformDisplayName))"
-        let sourceFilesList: [String] = ["Extensions", "Models", "Shared", platformDisplayName]
+        let sourceFilesList: [String] = ["Shared", platformDisplayName]
             .map { "Targets/\(name)/Sources/\($0)/**" }
         
         let mainTarget = Target(
