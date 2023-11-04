@@ -21,6 +21,39 @@ struct MainView: View, Loggable {
     @State private var error: Error? = nil
     
     var body: some View {
+        SidebarView
+        .alert(error: $error)
+        .task(requestAuthorizationForNotification)
+        .task(updateToken)
+        .onChange(of: authToken) { _, _ in
+            Task {
+                await updateToken()
+            }
+        }
+    }
+    
+    @Sendable
+    private func updateToken() async {
+        guard let authToken else { return }
+        logger.debug("Update the auth token")
+        logger.info("The authToken: \(String(describing: authToken))")
+        await session.updateToken(with: authToken)
+    }
+    
+    @Sendable
+    private func requestAuthorizationForNotification() async {
+        do {
+            try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
+        } catch {
+            logger.error("requestAuthorizationForNotification error: \(error.localizedDescription)")
+            self.error = error
+        }
+    }
+    
+    // swiftlint:disable identifier_name
+    @ViewBuilder
+    var SidebarView: some View {
+        #if os(iOS)
         TabView(selection: $selection) {
             Group {
                 HomeView(authToken: $authToken)
@@ -42,38 +75,46 @@ struct MainView: View, Loggable {
                     }
                     .tag(1)
             }
-            #if os(iOS)
             .toolbarBackground(.visible, for: .tabBar)
             .toolbarBackground(Color.flatDarkBackground, for: .tabBar)
             .toolbarColorScheme(.dark, for: .tabBar)
-            #endif
         }
-        .alert(error: $error)
-        .task(requestAuthorizationForNotification)
-        .task(updateAuthToken)
-        .onChange(of: authToken) { _, _ in
-            Task {
-                await updateAuthToken()
+        #elseif os(macOS)
+        NavigationView {
+            List {
+                NavigationLink(
+                    destination: HomeView(authToken: $authToken)
+                        .environment(\.session, session)
+                        .environmentObject(delegate)
+                        .environmentObject(preferences),
+                    label: {
+                        Label("Home", systemImage: "house")
+                            .foregroundStyle(Color.white)
+                    }
+                )
+                
+                NavigationLink(
+                    destination: SettingView(authToken: $authToken, selection: $selection)
+                        .environmentObject(delegate)
+                        .environmentObject(preferences),
+                    label: {
+                        Label("Settings", systemImage: "gear")
+                            .foregroundStyle(Color.white)
+                    }
+                )
+            }
+            .listStyle(.sidebar)
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
+                } label: {
+                    Image(systemName: "sidebar.leading")
+                }
             }
         }
-    }
-    
-    @Sendable
-    private func updateAuthToken() async {
-        guard let authToken else { return }
-        logger.debug("Update the auth token")
-        logger.info("The authToken: \(String(describing: authToken))")
-        await session.updateToken(with: authToken)
-    }
-    
-    @Sendable
-    private func requestAuthorizationForNotification() async {
-        do {
-            try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
-        } catch {
-            logger.error("requestAuthorizationForNotification error: \(error.localizedDescription)")
-            self.error = error
-        }
+        #endif
     }
 }
 

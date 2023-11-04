@@ -64,6 +64,11 @@ struct PRtifyApp: App, Loggable {
             await session.backgroundTaskSchedular.backgroundRefresh(by: username)
         }
         #endif
+        #if os(macOS)
+        .commands {
+            SidebarCommands()
+        }
+        #endif
         .modelContainer(for: Repository.self)
     }
 }
