@@ -87,6 +87,8 @@ struct MainView: View, Loggable {
                         .environment(\.session, session)
                         .environmentObject(delegate)
                         .environmentObject(preferences),
+                    tag: 0,
+                    selection: Binding { Optional(selection) } set: { selection = $0 ?? 0 },
                     label: {
                         Label("Home", systemImage: "house")
                             .foregroundStyle(Color.white)
@@ -97,6 +99,8 @@ struct MainView: View, Loggable {
                     destination: SettingView(authToken: $authToken, selection: $selection)
                         .environmentObject(delegate)
                         .environmentObject(preferences),
+                    tag: 1,
+                    selection: Binding { Optional(selection) } set: { selection = $0 ?? 0 },
                     label: {
                         Label("Settings", systemImage: "gear")
                             .foregroundStyle(Color.white)
