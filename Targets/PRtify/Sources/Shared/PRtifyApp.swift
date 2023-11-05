@@ -31,6 +31,15 @@ struct PRtifyApp: App, Loggable {
     }
 
     var body: some Scene {
+        #if os(macOS)
+        MenuBarExtra {
+            MenuBarView()
+        } label: {
+            Image(systemName: "bonjour")
+        }
+        .menuBarExtraStyle(.window)
+        #endif
+        
         WindowGroup {
             MainView()
                 .environmentObject(delegate)
