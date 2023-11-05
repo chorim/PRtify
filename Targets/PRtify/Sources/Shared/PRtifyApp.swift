@@ -26,38 +26,54 @@ struct PRtifyApp: App, Loggable {
     
     @ObservedObject var preferences: Preferences = .init()
     
+    #if os(macOS)
+    @State private var observer: NSKeyValueObservation?
+    @State private var isVisible: Bool = false
+    #endif
+    
     var session: Session {
         delegate.session
     }
-
+    
     var body: some Scene {
         #if os(macOS)
         MenuBarExtra {
-            MenuBarView()
+            mainView
+                .onAppear {
+                    observer = NSApplication.shared.observe(\.keyWindow) { _, _ in
+                        isVisible = NSApplication.shared.keyWindow != nil
+                    }
+                }
         } label: {
-            Image(systemName: "bonjour")
+            Image(systemName: "tray.fill")
+        }
+        .onChange(of: isVisible) { _, isVisible in
+            logger.info("PRtify window isVisible: \(isVisible)")
+            Task {
+                do {
+                    let phase: ScenePhase = isVisible ? .active : .background
+                    try await scheduleAppRefresh(using: phase)
+                } catch {
+                    logger.error("Failed to scheduleAppRefresh: \(error.localizedDescription)")
+                }
+            }
         }
         .menuBarExtraStyle(.window)
-        #endif
-        
+        #else
         WindowGroup {
-            MainView()
-                .environmentObject(delegate)
-                .environmentObject(preferences)
-                .environment(\.session, session)
+            mainView
         }
         .onChange(of: phase) { _, newPhase in
             logger.info("PRtify has entered an app phase: \(String(describing: newPhase))")
             
             Task {
-                guard let username = preferences.user?.login else {
-                    logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
-                    return
+                do {
+                    try await scheduleAppRefresh(using: newPhase)
+                } catch {
+                    logger.error("Failed to scheduleAppRefresh: \(error.localizedDescription)")
                 }
-                try await session.backgroundTaskSchedular.scheduleAppRefresh(by: username, using: newPhase)
             }
         }
-        #if os(iOS)
         .backgroundTask(.appRefresh(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)) {
             logger.notice("Start the backgroundRefresh")
             
@@ -65,19 +81,31 @@ struct PRtifyApp: App, Loggable {
                 logger.notice("Finish the backgroundRefresh")
             }
             
-            guard let username = await preferences.user?.login, await session.credential != nil else {
+            guard let username = await preferences.user?.login, await session.credential?.authToken != nil else {
                 logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
                 return
             }
             
             await session.backgroundTaskSchedular.backgroundRefresh(by: username)
         }
-        #endif
-        #if os(macOS)
-        .commands {
-            SidebarCommands()
-        }
-        #endif
         .modelContainer(for: Repository.self)
+        #endif
+    }
+    
+    @ViewBuilder
+    var mainView: some View {
+        MainView()
+            .environmentObject(delegate)
+            .environmentObject(preferences)
+            .environment(\.session, session)
+    }
+    
+    private func scheduleAppRefresh(using phase: ScenePhase) async throws {
+        guard let username = preferences.user?.login else {
+            logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
+            return
+        }
+        
+        try await session.backgroundTaskSchedular.scheduleAppRefresh(by: username, using: phase)
     }
 }

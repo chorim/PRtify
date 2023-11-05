@@ -24,6 +24,23 @@ struct SettingView: View {
         preferences.user
     }
     
+    @ViewBuilder
+    var linkProfileButton: some View {
+        #if os(iOS)
+        Button {
+            showingWebView = true
+        } label: {
+            Text("Open My Profile")
+        }
+        #elseif os(macOS)
+        if let user = user {
+            Link(destination: user.htmlURL) {
+                Text("Open My Profile")
+            }
+        }
+        #endif
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -36,12 +53,11 @@ struct SettingView: View {
                                 
                                 Text("\(user.name ?? "") (@\(user.login))")
                             }
+                            linkProfileButton
+                        }
+                        
+                        Section(header: Text("Refresh rates"), footer: Text("Higher refresh rates may result in higher battery consumption.")) {
                             
-                            Button {
-                                showingWebView = true
-                            } label: {
-                                Text("Open My Profile")
-                            }
                         }
                         
                         Section {
@@ -72,6 +88,7 @@ struct SettingView: View {
                         }
 
                         Text("Build version: ")
+                        Text("Access Token: \(String(describing: authToken?.accessToken))")
                     }
                     #endif
                 }

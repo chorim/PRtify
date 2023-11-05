@@ -46,6 +46,13 @@ struct HomeView: View, Loggable {
                         
                         // repositorySectionView
                         // controlSectionView
+                        #if os(macOS)
+                        Section {
+                            SettingButtonView(authToken: $authToken)
+                            
+                            quitButton
+                        }
+                        #endif
                     }
                     .scrollContentBackground(.hidden)
                     .task {
@@ -74,7 +81,11 @@ struct HomeView: View, Loggable {
                 }
             }
             .background(Color.flatDarkBackground)
+            #if os(iOS)
             .navigationTitle("Home")
+            #elseif os(macOS)
+            .navigationTitle("PRtify")
+            #endif
         }
         #if os(iOS)
         .introspect(.navigationStack, on: .iOS(.v16, .v17)) {
@@ -89,7 +100,9 @@ struct HomeView: View, Loggable {
                 ProfileView(user: Binding { user } set: { preferences.user = $0 })
             }
         }
+        #if os(iOS)
         .alert(error: $error)
+        #endif
     }
 
     @Sendable

@@ -78,7 +78,7 @@ public class BackgroundTaskScheduler: Loggable {
             repeating: Self.preferredBackgroundTasksTimeInterval,
             leeway: .seconds(30)
         )
-        logger.notice("New background timer has been created")
+        logger.notice("New background timer has been created: \(String(describing: timerSource))")
         return timerSource
     }
     
@@ -89,10 +89,11 @@ public class BackgroundTaskScheduler: Loggable {
         }
         #endif
         backgroundTimer = nil
+        logger.notice("The background timer has been cancelled.")
         #if os(iOS)
         BGTaskScheduler.shared.cancelAllTaskRequests()
-        #endif
         logger.notice("[[BGTaskScheduler sharedScheduler] cancelAllTaskRequests] has been called")
+        #endif
     }
 }
 
@@ -114,7 +115,7 @@ public extension BackgroundTaskScheduler {
             
             // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
             logger.debug("Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)")
-            #endif
+            
             
             #if DEBUG
             Task {
@@ -129,7 +130,8 @@ public extension BackgroundTaskScheduler {
                 try await UNUserNotificationCenter.current().add(notificationRequest)
             }
             #endif
-            
+            #endif
+
         @unknown default:
             logger.critical("Unknown ScenePhase: \(String(describing: phase))")
             fatalError("Unknown ScenePhase: \(String(describing: phase))")

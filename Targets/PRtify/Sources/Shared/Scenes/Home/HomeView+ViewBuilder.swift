@@ -186,3 +186,21 @@ extension HomeView {
         }
     }
 }
+
+#if os(macOS)
+extension HomeView {
+    @ViewBuilder
+    var quitButton: some View {
+        Button {
+            NSApplication.shared.terminate(nil)
+        } label: {
+            Text("Quit")
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .background(Color.flatDarkCardBackground)
+                .buttonStyle(.plain)
+                .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+    }
+}
+#endif

@@ -15,13 +15,13 @@ struct MainView: View, Loggable {
     @EnvironmentObject private var preferences: Preferences
     @Environment(\.session) private var session: Session
  
-    @KeychainStorage("authToken") private var authToken: Session.AuthToken? = nil
+    @AppStorage("authToken") private var authToken: Session.AuthToken? = nil
     
     @State private var selection: Int = 0
     @State private var error: Error? = nil
     
     var body: some View {
-        SidebarView
+        TabBarView
         .alert(error: $error)
         .task(requestAuthorizationForNotification)
         .task(updateToken)
@@ -52,14 +52,11 @@ struct MainView: View, Loggable {
     
     // swiftlint:disable identifier_name
     @ViewBuilder
-    var SidebarView: some View {
+    var TabBarView: some View {
         #if os(iOS)
         TabView(selection: $selection) {
             Group {
-                HomeView(authToken: $authToken)
-                    .environment(\.session, session)
-                    .environmentObject(delegate)
-                    .environmentObject(preferences)
+                homeView
                     .tabItem {
                         Label("Home", systemImage: "house")
                             .foregroundStyle(Color.white)
@@ -80,45 +77,16 @@ struct MainView: View, Loggable {
             .toolbarColorScheme(.dark, for: .tabBar)
         }
         #elseif os(macOS)
-        NavigationView {
-            List {
-                NavigationLink(
-                    destination: HomeView(authToken: $authToken)
-                        .environment(\.session, session)
-                        .environmentObject(delegate)
-                        .environmentObject(preferences),
-                    tag: 0,
-                    selection: Binding { Optional(selection) } set: { selection = $0 ?? 0 },
-                    label: {
-                        Label("Home", systemImage: "house")
-                            .foregroundStyle(Color.white)
-                    }
-                )
-                
-                NavigationLink(
-                    destination: SettingView(authToken: $authToken, selection: $selection)
-                        .environmentObject(delegate)
-                        .environmentObject(preferences),
-                    tag: 1,
-                    selection: Binding { Optional(selection) } set: { selection = $0 ?? 0 },
-                    label: {
-                        Label("Settings", systemImage: "gear")
-                            .foregroundStyle(Color.white)
-                    }
-                )
-            }
-            .listStyle(.sidebar)
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button {
-                    NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
-                } label: {
-                    Image(systemName: "sidebar.leading")
-                }
-            }
-        }
+        homeView
         #endif
+    }
+    
+    @ViewBuilder
+    var homeView: some View {
+        HomeView(authToken: $authToken)
+            .environment(\.session, session)
+            .environmentObject(delegate)
+            .environmentObject(preferences)
     }
 }
 
