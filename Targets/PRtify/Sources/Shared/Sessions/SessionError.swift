@@ -9,6 +9,20 @@
 import Foundation
 
 public enum SessionError: Error {
+    case missingArguments
     case invalidResponse
-    case invalidStatusCode
+    case invalidStatusCode(Int)
+}
+
+extension SessionError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .missingArguments:
+            return "Missing the arguments from server."
+        case .invalidResponse:
+            return "Invalid the response from server."
+        case .invalidStatusCode(let code):
+            return "Invalid the status code from server. code: \(code)"
+        }
+    }
 }

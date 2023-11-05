@@ -76,7 +76,7 @@ public actor Session: Loggable {
         return try await urlSession.dataTask(for: urlRequest, AuthToken.self)
     }
     
-    public func updateToken(with authToken: AuthToken) {
+    public func updateToken(with authToken: AuthToken?) {
         urlSession.credential = SessionCredential(authToken: authToken)
     }
     
@@ -138,7 +138,7 @@ private extension Session {
 }
 
 public struct SessionCredential {
-    let authToken: Session.AuthToken
+    let authToken: Session.AuthToken?
 }
 
 public extension URLSession {
@@ -156,6 +156,7 @@ public extension URLSession {
         set { objc_setAssociatedObject(self, &AssociatedKey.credentialKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
+    // swiftlint:disable function_body_length
     func dataTask<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
         var dataTask: URLSessionDataTask?
         
@@ -178,10 +179,10 @@ public extension URLSession {
         
         var mutableURLRequest = urlRequest
         
-        if let credential {
+        if let credential, let authToken = credential.authToken {
             let authorization = [
-                credential.authToken.tokenType.description,
-                credential.authToken.accessToken
+                authToken.tokenType.description,
+                authToken.accessToken
             ].joined(separator: " ")
             
             mutableURLRequest.setValue(authorization, forHTTPHeaderField: "Authorization")
@@ -196,8 +197,8 @@ public extension URLSession {
                     }
 
                     guard (200..<300).contains(httpResponse.statusCode) else {
-                        onError(SessionError.invalidStatusCode)
-                        return continuation.resume(throwing: SessionError.invalidStatusCode)
+                        onError(SessionError.invalidStatusCode(httpResponse.statusCode))
+                        return continuation.resume(throwing: SessionError.invalidStatusCode(httpResponse.statusCode))
                     }
                     
                     guard let data = data, let response = response else {
