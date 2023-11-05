@@ -34,10 +34,13 @@ struct MainView: View, Loggable {
     
     @Sendable
     private func updateToken() async {
-        guard let authToken else { return }
         logger.debug("Update the auth token")
         logger.info("The authToken: \(String(describing: authToken))")
         await session.updateToken(with: authToken)
+        
+        if authToken == nil {
+            preferences.user = nil
+        }
     }
     
     @Sendable
