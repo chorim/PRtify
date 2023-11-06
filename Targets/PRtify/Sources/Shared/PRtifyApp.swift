@@ -44,8 +44,20 @@ struct PRtifyApp: App, Loggable {
                         isVisible = NSApplication.shared.keyWindow != nil
                     }
                 }
+                .task {
+                    logger.debug("TASK")
+                }
         } label: {
             Image(systemName: "tray.fill")
+                .task {
+                    // Since macOS environments rely on menu bar, background scheduler needs calling after app launched.
+                    // Default value is background after app launched.
+                    do {
+                        try await scheduleAppRefresh(using: .background)
+                    } catch {
+                        logger.error("Failed to scheduleAppRefresh after app launched: \(error.localizedDescription)")
+                    }
+                }
         }
         .onChange(of: isVisible) { _, isVisible in
             logger.info("PRtify window isVisible: \(isVisible)")
@@ -59,6 +71,7 @@ struct PRtifyApp: App, Loggable {
             }
         }
         .menuBarExtraStyle(.window)
+        .modelContainer(for: Node.self)
         #else
         WindowGroup {
             mainView
@@ -88,7 +101,7 @@ struct PRtifyApp: App, Loggable {
             
             await session.backgroundTaskSchedular.backgroundRefresh(by: username)
         }
-        .modelContainer(for: Repository.self)
+        .modelContainer(for: Node.self)
         #endif
     }
     
