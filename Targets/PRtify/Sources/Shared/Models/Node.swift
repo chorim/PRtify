@@ -9,7 +9,7 @@
 import Foundation
 import SwiftData
 
-// @Model
+@Model
 public class Node: Codable {
     var url: URL
     var updatedAt: Date
@@ -22,12 +22,12 @@ public class Node: Codable {
     var author: Author
     var repository: Repository
     var commits: CommitsNodes?
-    var labels: Nodes<Label>
+    // var labels: Nodes<NodeLabel>
     var isDraft: Bool
     var isReadByViewer: Bool
     
     // swiftlint:disable line_length
-    init(url: URL, updatedAt: Date, createdAt: Date, title: String, number: Int, deletions: Int?, additions: Int?, reviews: Review, author: Author, repository: Repository, commits: CommitsNodes?, labels: Nodes<Label>, isDraft: Bool, isReadByViewer: Bool) {
+    init(url: URL, updatedAt: Date, createdAt: Date, title: String, number: Int, deletions: Int?, additions: Int?, reviews: Review, author: Author, repository: Repository, commits: CommitsNodes?, isDraft: Bool, isReadByViewer: Bool) {
         self.url = url
         self.updatedAt = updatedAt
         self.createdAt = createdAt
@@ -39,7 +39,7 @@ public class Node: Codable {
         self.author = author
         self.repository = repository
         self.commits = commits
-        self.labels = labels
+        // self.labels = labels
         self.isDraft = isDraft
         self.isReadByViewer = isReadByViewer
     }
@@ -57,7 +57,7 @@ public class Node: Codable {
         author = try container.decode(Author.self, forKey: .author)
         repository = try container.decode(Repository.self, forKey: .repository)
         commits = try container.decodeIfPresent(CommitsNodes.self, forKey: .commits)
-        labels = try container.decode(Nodes<Label>.self, forKey: .labels)
+        // labels = try container.decode(Nodes<NodeLabel>.self, forKey: .labels)
         isDraft = try container.decode(Bool.self, forKey: .isDraft)
         isReadByViewer = try container.decode(Bool.self, forKey: .isReadByViewer)
     }
@@ -75,7 +75,7 @@ public class Node: Codable {
         try container.encode(author, forKey: .author)
         try container.encode(repository, forKey: .repository)
         try container.encodeIfPresent(commits, forKey: .commits)
-        try container.encode(labels, forKey: .labels)
+        // try container.encode(labels, forKey: .labels)
         try container.encode(isDraft, forKey: .isDraft)
         try container.encode(isReadByViewer, forKey: .isReadByViewer)
     }
@@ -92,35 +92,9 @@ public class Node: Codable {
         case author
         case repository
         case commits
-        case labels
+        // case labels
         case isDraft
         case isReadByViewer
-    }
-    
-    struct Repository: Codable {
-        let name: String
-        
-        enum CodingKeys: String, CodingKey {
-            case name
-        }
-    }
-    
-    struct Nodes<T: Codable & Hashable>: Codable, Hashable {
-        let nodes: [T]
-        
-        enum CodingKeys: String, CodingKey {
-            case nodes
-        }
-    }
-    
-    struct Label: Codable, Hashable {
-        var name: String
-        var color: String
-        
-        enum CodingKeys: String, CodingKey {
-            case name
-            case color
-        }
     }
 }
 

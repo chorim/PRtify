@@ -7,11 +7,23 @@
 //
 
 import Foundation
+import SwiftData
 
-struct CommitsNodes: Codable {
+@Model
+class CommitsNodes: Codable {
     var nodes: [Commit]
 
     enum CodingKeys: String, CodingKey {
         case nodes
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        nodes = try container.decode([Commit].self, forKey: .nodes)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(nodes, forKey: .nodes)
     }
 }
