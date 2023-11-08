@@ -14,18 +14,16 @@ struct MainView: View, Loggable {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
     @EnvironmentObject private var preferences: Preferences
     @Environment(\.session) private var session: Session
- 
-    @AppStorage("authToken") private var authToken: Session.AuthToken? = nil
-    
+
     @State private var selection: Int = 0
     @State private var error: Error? = nil
-    
+        
     var body: some View {
         TabBarView
         .alert(error: $error)
         .task(requestAuthorizationForNotification)
         .task(updateToken)
-        .onChange(of: authToken) { _, _ in
+        .onChange(of: preferences.authToken) { _, _ in
             Task {
                 await updateToken()
             }
@@ -35,10 +33,10 @@ struct MainView: View, Loggable {
     @Sendable
     private func updateToken() async {
         logger.debug("Update the auth token")
-        logger.info("The authToken: \(String(describing: authToken))")
-        await session.updateToken(with: authToken)
+        logger.info("The authToken: \(String(describing: preferences.authToken))")
+        await session.updateToken(with: preferences.authToken)
         
-        if authToken == nil {
+        if preferences.authToken == nil {
             preferences.user = nil
         }
     }
@@ -86,7 +84,7 @@ struct MainView: View, Loggable {
     
     @ViewBuilder
     var homeView: some View {
-        HomeView(authToken: $authToken)
+        HomeView(authToken: preferences.$authToken)
             .environment(\.session, session)
             .environmentObject(delegate)
             .environmentObject(preferences)

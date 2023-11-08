@@ -11,4 +11,5 @@ import Combine
 
 final class Preferences: ObservableObject {
     @AppStorage("user") var user: User? = nil
+    @AppStorage("authToken") var authToken: Session.AuthToken? = nil
 }
