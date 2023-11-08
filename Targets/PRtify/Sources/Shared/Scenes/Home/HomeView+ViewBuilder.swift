@@ -21,20 +21,6 @@ extension HomeView {
     }
     
     @ViewBuilder
-    var addButton: some View {
-        Button {
-            self.showingRepositoriesAddView = true
-        } label: {
-            HStack {
-                Spacer()
-                Label("Add", systemImage: "plus")
-                    .foregroundStyle(.white)
-                Spacer()
-            }
-        }
-    }
-    
-    @ViewBuilder
     var refreshButton: some View {
         Button {
             logger.debug("User tapped refresh button: \(Date())")
@@ -53,65 +39,11 @@ extension HomeView {
     }
     
     @ViewBuilder
-    var repositoryView: some View {
-        ForEach(repositories) { repository in
-            HStack {
-                Text("\(repository.url.absoluteString)")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                
-                Spacer()
-             
-                switch repository.status {
-                case .connected:
-                    Image(systemName: "checkmark")
-                        .renderingMode(.template)
-                        .foregroundStyle(.green)
-                    
-                case .disconnected:
-                    Image(systemName: "xmark")
-                        .renderingMode(.template)
-                        .foregroundStyle(.red)
-                    
-                case .underlying:
-                    progressView
-                }
-            }
-        }
-        .onDelete(perform: deleteRepository)
-    }
-    
-    @ViewBuilder
     var progressView: some View {
         ProgressView()
             .progressViewStyle(CircularProgressViewStyle(tint: Color.white))
             .background(Color.flatDarkCardBackground)
             .preferredColorScheme(.dark)
-    }
-    
-    @ViewBuilder
-    var controlSectionView: some View {
-        Section {
-            if !repositories.isEmpty {
-                refreshButton
-                    .listRowBackground(Color.flatDarkCardBackground)
-            }
-            
-            addButton
-                .listRowBackground(Color.flatDarkCardBackground)
-        }
-    }
-    
-    @ViewBuilder
-    var repositorySectionView: some View {
-        Section(header: Text("Added repositories").foregroundColor(.white)) {
-            if repositories.isEmpty {
-                emptyView
-            } else {
-                repositoryView
-                    .listRowBackground(Color.flatDarkContainerBackground)
-            }
-        }
     }
     
     @ViewBuilder
