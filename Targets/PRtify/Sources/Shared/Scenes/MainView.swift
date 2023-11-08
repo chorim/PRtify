@@ -64,7 +64,7 @@ struct MainView: View, Loggable {
                     }
                     .tag(0)
                 
-                SettingView(authToken: $authToken, selection: $selection)
+                SettingView(authToken: preferences.$authToken, selection: $selection)
                     .environmentObject(delegate)
                     .environmentObject(preferences)
                     .tabItem {
