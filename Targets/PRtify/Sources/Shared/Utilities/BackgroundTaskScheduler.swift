@@ -37,8 +37,6 @@ public class BackgroundTaskScheduler: Loggable {
     
     public static let backgroundRefreshBackgroundTaskIdentifier: String =
         "\(Bundle.prtify.bundleIdentifier!).background-refresh"
-    public static let dataCleansingBackgroundTaskIdentifier: String =
-        "\(Bundle.prtify.bundleIdentifier!).data-cleansing"
     
     public var mainContext: ModelContext?
     
@@ -54,61 +52,20 @@ public class BackgroundTaskScheduler: Loggable {
         Date(timeIntervalSinceNow: preferredBackgroundTasksTimeInterval)
     }
     
-    // swiftlint:disable function_body_length
     func newBackgroundTimer(by username: String) -> DispatchSourceTimer {
         let timerSource = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         timerSource.setEventHandler {
             Task {
                 do {
-                    let nodes = try await self.session.fetchPullRequests(by: username)
-                    
-                    guard let mainContext = self.mainContext else { fatalError("mainContext is nil") }
-                    
-                    var fetchDescriptor = FetchDescriptor<Node>()
-                    // fetchDescriptor.sortBy = [\Node.createdAt]
-                    let nodesFromDescriptor = try mainContext.fetch(fetchDescriptor)
-                    
-                    var numberOfGraph: Int = 0
-                    for node in nodes {
-                        numberOfGraph += node.value.count
+                    let hasNewPullRequest = await self.hasNewPullRequest(by: username)
+                    if hasNewPullRequest {
+                        try await self.notifyUser()
                     }
-                    
-                    if nodesFromDescriptor.count != numberOfGraph {
-                        let content = UNMutableNotificationContent()
-                        content.title = "New pull request exists!"
-                        content.subtitle = "Check it now!"
-                        let request = UNNotificationRequest(
-                            identifier: UUID().uuidString,
-                            content: content,
-                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-                        )
-                        try? await UNUserNotificationCenter.current().add(request)
-                    }
-                    
-                    // Clean node data
-                    try mainContext.delete(model: Node.self)
-                    
-                    for node in nodes {
-                        let graphs = node.value
-                        
-                        for graph in graphs {
-                            mainContext.insert(graph)
-                        }
-                    }
-                    
-                    try mainContext.save()
                     
                     #if DEBUG
-                    let content = UNMutableNotificationContent()
-                    content.title = "[DEV] New pull request from background task!"
-                    content.subtitle = "1 Check it now!"
-                    let request = UNNotificationRequest(
-                        identifier: UUID().uuidString,
-                        content: content,
-                        trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-                    )
-                    try? await UNUserNotificationCenter.current().add(request)
+                    await self.notifyForDebug("[DEV] DispatchSourceTimer has been executed!", message: "hasNewPullRequest: \(hasNewPullRequest)")
                     #endif
+                    
                 } catch {
                     self.logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
                 }
@@ -159,15 +116,7 @@ public extension BackgroundTaskScheduler {
             
             #if DEBUG
             Task {
-                let content = UNMutableNotificationContent()
-                content.title = "[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!"
-                content.subtitle = "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)"
-                let notificationRequest = UNNotificationRequest(
-                    identifier: UUID().uuidString,
-                    content: content,
-                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-                )
-                try await UNUserNotificationCenter.current().add(notificationRequest)
+                await notifyForDebug("[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!", message: "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)")
             }
             #endif
             #endif
@@ -188,20 +137,13 @@ public extension BackgroundTaskScheduler {
         do {
             // Only iOS
             #if os(iOS)
-            // try await ...
+            let hasNewPullRequest = await hasNewPullRequest(by: username)
+            
+            if hasNewPullRequest {
+                try await notifyUser()
+            }
             #endif
             try scheduleAppRefresh(by: username, using: .background)
-            #if DEBUG
-            let content = UNMutableNotificationContent()
-            content.title = "[DEV] New pull request from background task!"
-            content.subtitle = "0 Check it now!"
-            let request = UNNotificationRequest(
-                identifier: UUID().uuidString,
-                content: content,
-                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-            )
-            try await UNUserNotificationCenter.current().add(request)
-            #endif
         } catch {
             logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
             return false
@@ -210,3 +152,77 @@ public extension BackgroundTaskScheduler {
         return true
     }
 }
+
+// MARK: FetchDescriptor
+private extension BackgroundTaskScheduler {
+    func hasNewPullRequest(by username: String) async -> Bool {
+        do {
+            let nodes = try await self.session.fetchPullRequests(by: username)
+            var numberOfGraphFromRemote: Int = 0
+            
+            for node in nodes {
+                numberOfGraphFromRemote += node.value.count
+            }
+            
+            defer {
+                // Clean node data
+                try? mainContext?.delete(model: Node.self)
+                
+                // Save new node data
+                for node in nodes {
+                    let graphs = node.value
+                    
+                    for graph in graphs {
+                        mainContext?.insert(graph)
+                    }
+                }
+                
+                try? mainContext?.save()
+            }
+            
+            return numberOfGraphFromStorage() != numberOfGraphFromRemote
+        } catch {
+            logger.error("\(username)'s hasNewPullRequest error: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    func numberOfGraphFromStorage() -> Int? {
+        let fetchDescriptor = FetchDescriptor<Node>()
+        let nodesFromDescriptor = try? mainContext?.fetch(fetchDescriptor)
+        
+        return nodesFromDescriptor?.count
+    }
+    
+    func notifyUser() async throws {
+        let content = UNMutableNotificationContent()
+        content.title = "New pull request exists!"
+        content.subtitle = "Check it now!"
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+        try await UNUserNotificationCenter.current().add(request)
+    }
+}
+
+#if DEBUG
+private extension BackgroundTaskScheduler {
+    func notifyForDebug(_ title: String, message: String = "") async {
+        do {
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.subtitle = message
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            )
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            logger.error("notifyForDebug error: \(error.localizedDescription)")
+        }
+    }
+}
+#endif
