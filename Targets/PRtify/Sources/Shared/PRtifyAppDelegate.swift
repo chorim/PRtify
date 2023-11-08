@@ -8,13 +8,28 @@
 
 import Foundation
 import UserNotifications
+import SwiftData
 
 @MainActor
 class PRtifyAppDelegate: NSObject, ObservableObject, Loggable {
     let session = Session.shared
-
+    
+    let container: ModelContainer = {
+        let schema = Schema([Node.self])
+        let config = ModelConfiguration(schema: schema)
+        do {
+            return try ModelContainer(for: schema, configurations: config)
+        } catch {
+            fatalError("Unresolved error \(error), \(error.localizedDescription)")
+        }
+    }()
+    
     override init() {
         super.init()
+        
+        Task {
+            await session.backgroundTaskSchedular.mainContext = container.mainContext
+        }
     }
 }
 

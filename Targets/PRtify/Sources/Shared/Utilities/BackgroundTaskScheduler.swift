@@ -12,6 +12,7 @@ import BackgroundTasks
 #endif
 import UserNotifications
 import SwiftUI
+import SwiftData
 
 public class BackgroundTaskScheduler: Loggable {
     private unowned let session: Session
@@ -29,14 +30,17 @@ public class BackgroundTaskScheduler: Loggable {
         }
     }
     
-    init(session: Session) {
+    init(session: Session, context: ModelContext? = nil) {
         self.session = session
+        self.mainContext = context
     }
     
     public static let backgroundRefreshBackgroundTaskIdentifier: String =
         "\(Bundle.prtify.bundleIdentifier!).background-refresh"
     public static let dataCleansingBackgroundTaskIdentifier: String =
         "\(Bundle.prtify.bundleIdentifier!).data-cleansing"
+    
+    public var mainContext: ModelContext?
     
     static var preferredBackgroundTasksTimeInterval: TimeInterval {
         #if DEBUG
@@ -50,12 +54,50 @@ public class BackgroundTaskScheduler: Loggable {
         Date(timeIntervalSinceNow: preferredBackgroundTasksTimeInterval)
     }
     
+    // swiftlint:disable function_body_length
     func newBackgroundTimer(by username: String) -> DispatchSourceTimer {
         let timerSource = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         timerSource.setEventHandler {
             Task {
                 do {
                     let nodes = try await self.session.fetchPullRequests(by: username)
+                    
+                    guard let mainContext = self.mainContext else { fatalError("mainContext is nil") }
+                    
+                    var fetchDescriptor = FetchDescriptor<Node>()
+                    // fetchDescriptor.sortBy = [\Node.createdAt]
+                    let nodesFromDescriptor = try mainContext.fetch(fetchDescriptor)
+                    
+                    var numberOfGraph: Int = 0
+                    for node in nodes {
+                        numberOfGraph += node.value.count
+                    }
+                    
+                    if nodesFromDescriptor.count != numberOfGraph {
+                        let content = UNMutableNotificationContent()
+                        content.title = "New pull request exists!"
+                        content.subtitle = "Check it now!"
+                        let request = UNNotificationRequest(
+                            identifier: UUID().uuidString,
+                            content: content,
+                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+                        )
+                        try? await UNUserNotificationCenter.current().add(request)
+                    }
+                    
+                    // Clean node data
+                    try mainContext.delete(model: Node.self)
+                    
+                    for node in nodes {
+                        let graphs = node.value
+                        
+                        for graph in graphs {
+                            mainContext.insert(graph)
+                        }
+                    }
+                    
+                    try mainContext.save()
+                    
                     #if DEBUG
                     let content = UNMutableNotificationContent()
                     content.title = "[DEV] New pull request from background task!"
@@ -65,9 +107,8 @@ public class BackgroundTaskScheduler: Loggable {
                         content: content,
                         trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
                     )
-                    try await UNUserNotificationCenter.current().add(request)
+                    try? await UNUserNotificationCenter.current().add(request)
                     #endif
-                    self.logger.info("Nodes: \(String(describing: nodes))")
                 } catch {
                     self.logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
                 }
@@ -116,7 +157,6 @@ public extension BackgroundTaskScheduler {
             // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
             logger.debug("Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)")
             
-            
             #if DEBUG
             Task {
                 let content = UNMutableNotificationContent()
@@ -140,9 +180,16 @@ public extension BackgroundTaskScheduler {
     
     @discardableResult
     func backgroundRefresh(by username: String) async -> Bool {
+        #if os(macOS)
+        // Only macOS
         backgroundTimer = newBackgroundTimer(by: username)
+        #endif
         
         do {
+            // Only iOS
+            #if os(iOS)
+            // try await ...
+            #endif
             try scheduleAppRefresh(by: username, using: .background)
             #if DEBUG
             let content = UNMutableNotificationContent()

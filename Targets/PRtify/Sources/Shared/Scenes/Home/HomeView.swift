@@ -25,11 +25,10 @@ struct HomeView: View, Loggable {
     @State var assignedNodes: HomeNodeState = .loading
     @State var requestedNodes: HomeNodeState = .loading
 
-    @State public var showingRepositoriesAddView: Bool = false
     @State public var showingProfileView: Bool = false
     
-    @Query(sort: [SortDescriptor(\Repository.createdAt, order: .reverse)], animation: .smooth)
-    public var repositories: [Repository]
+    @Query(sort: [SortDescriptor(\Node.createdAt, order: .reverse)], animation: .smooth)
+    public var nodes: [Node]
     
     private var user: User? {
         preferences.user
@@ -44,8 +43,6 @@ struct HomeView: View, Loggable {
                         assignedNodesView
                         requestedNodesView
                         
-                        // repositorySectionView
-                        // controlSectionView
                         #if os(macOS)
                         Section {
                             SettingButtonView(authToken: $authToken)
@@ -92,17 +89,14 @@ struct HomeView: View, Loggable {
             delegate.configureNavigationBar($0)
         }
         #endif
-        .sheet(isPresented: $showingRepositoriesAddView) {
-            RepositoriesAddView(showingRepositoriesAddView: $showingRepositoriesAddView)
-        }
         .sheet(isPresented: $showingProfileView) {
             if let user = preferences.user {
                 ProfileView(user: Binding { user } set: { preferences.user = $0 })
             }
         }
-        #if os(iOS)
+        // #if os(iOS)
         .alert(error: $error)
-        #endif
+        // #endif
     }
 
     @Sendable
@@ -120,20 +114,6 @@ struct HomeView: View, Loggable {
         }
     }
     
-    func deleteRepository(_ indexSet: IndexSet) {
-        for index in indexSet {
-            let repository = repositories[index]
-            modelContext.delete(repository)
-        }
-        
-        do {
-            try modelContext.save()
-        } catch {
-            logger.error("An error occurred while calling the save of modelContext: \(error.localizedDescription)")
-            self.error = error
-        }
-    }
-    
     @Sendable
     func fetchRepositories() async {
         logger.info("Call fetchRepositories(all) at \(Date())")
@@ -145,6 +125,16 @@ struct HomeView: View, Loggable {
             }
             
             let nodes = try await session.fetchPullRequests(by: username)
+            try modelContext.delete(model: Node.self)
+            for node in nodes {
+                let graphs = node.value
+                
+                for graph in graphs {
+                    modelContext.insert(graph)
+                }
+            }
+            
+            try modelContext.save()
             
             let createdNodes: [Node] = nodes[.created(username: username)] ?? []
             self.createdNodes = createdNodes.isEmpty ? .empty : .loaded(createdNodes)

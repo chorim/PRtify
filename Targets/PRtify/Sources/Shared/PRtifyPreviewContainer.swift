@@ -13,12 +13,12 @@ import SwiftData
 let PRtifyPreviewContainer: ModelContainer = {
     do {
         let container = try ModelContainer(
-            for: Repository.self,
+            for: Node.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         
-        let repository = Repository(url: URL(string: "https://github.com/chorim/PRtify")!)
-        container.mainContext.insert(repository)
+        // let repository = Repository(url: URL(string: "https://github.com/chorim/PRtify")!)
+        // container.mainContext.insert(repository)
         
         return container
     } catch {

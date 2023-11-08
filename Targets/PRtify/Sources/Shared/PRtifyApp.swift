@@ -34,6 +34,10 @@ struct PRtifyApp: App, Loggable {
     var session: Session {
         delegate.session
     }
+
+    var container: ModelContainer {
+        delegate.container
+    }
     
     var body: some Scene {
         #if os(macOS)
@@ -44,14 +48,13 @@ struct PRtifyApp: App, Loggable {
                         isVisible = NSApplication.shared.keyWindow != nil
                     }
                 }
-                .task {
-                    logger.debug("TASK")
-                }
+                .modelContainer(container)
         } label: {
             Image(systemName: "tray.fill")
                 .task {
-                    // Since macOS environments rely on menu bar, background scheduler needs calling after app launched.
+                    // Since macOS environment depends on menu bar, background scheduler needs calling after app launched.
                     // Default value is background after app launched.
+                    await session.updateToken(with: preferences.authToken)
                     do {
                         try await scheduleAppRefresh(using: .background)
                     } catch {
@@ -71,7 +74,6 @@ struct PRtifyApp: App, Loggable {
             }
         }
         .menuBarExtraStyle(.window)
-        .modelContainer(for: Node.self)
         #else
         WindowGroup {
             mainView
@@ -101,7 +103,7 @@ struct PRtifyApp: App, Loggable {
             
             await session.backgroundTaskSchedular.backgroundRefresh(by: username)
         }
-        .modelContainer(for: Node.self)
+        .modelContainer(container)
         #endif
     }
     
