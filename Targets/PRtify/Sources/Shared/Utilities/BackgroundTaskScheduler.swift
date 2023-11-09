@@ -13,9 +13,12 @@ import BackgroundTasks
 import UserNotifications
 import SwiftUI
 import SwiftData
+import Logging
 
-public class BackgroundTaskScheduler: Loggable {
+public class BackgroundTaskScheduler {
     private unowned let session: Session
+    
+    private let logger = Logger(category: "BackgroundTaskScheduler")
     
     #if os(macOS)
     private var backgroundTimer: DispatchSourceTimer? {
