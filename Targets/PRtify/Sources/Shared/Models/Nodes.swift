@@ -27,4 +27,3 @@ class Nodes<T: Codable & Hashable>: Codable, Hashable {
         try container.encode(nodes, forKey: .nodes)
     }
 }
-

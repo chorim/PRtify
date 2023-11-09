@@ -17,6 +17,7 @@ import SwiftData
 public class BackgroundTaskScheduler: Loggable {
     private unowned let session: Session
     
+    #if os(macOS)
     private var backgroundTimer: DispatchSourceTimer? {
         willSet {
             guard backgroundTimer !== newValue else { return }
@@ -29,6 +30,7 @@ public class BackgroundTaskScheduler: Loggable {
             backgroundTimer?.activate()
         }
     }
+    #endif
     
     init(session: Session, context: ModelContext? = nil) {
         self.session = session
@@ -85,12 +87,11 @@ public class BackgroundTaskScheduler: Loggable {
         BGTaskScheduler.shared.getPendingTaskRequests { all in
             self.logger.notice("Pending Tasks Requests: \(String(describing: all))")
         }
-        #endif
-        backgroundTimer = nil
-        logger.notice("The background timer has been cancelled.")
-        #if os(iOS)
         BGTaskScheduler.shared.cancelAllTaskRequests()
         logger.notice("[[BGTaskScheduler sharedScheduler] cancelAllTaskRequests] has been called")
+        #elseif os(macOS)
+        backgroundTimer = nil
+        logger.notice("The background timer has been cancelled.")
         #endif
     }
 }
@@ -102,8 +103,6 @@ public extension BackgroundTaskScheduler {
             invalidate()
             
         case .background:
-            backgroundTimer = newBackgroundTimer(by: username)
-            
             #if os(iOS)
             logger.debug("Requesting the BGAppRefreshTaskRequest for: \(Self.backgroundRefreshBackgroundTaskIdentifier)")
             
@@ -119,6 +118,10 @@ public extension BackgroundTaskScheduler {
                 await notifyForDebug("[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!", message: "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)")
             }
             #endif
+            #elseif os(macOS)
+            backgroundTimer = newBackgroundTimer(by: username)
+            #else
+            fatalError("Unsupported platform.")
             #endif
 
         @unknown default:
@@ -157,41 +160,47 @@ public extension BackgroundTaskScheduler {
 private extension BackgroundTaskScheduler {
     func hasNewPullRequest(by username: String) async -> Bool {
         do {
-            let nodes = try await self.session.fetchPullRequests(by: username)
-            var numberOfGraphFromRemote: Int = 0
+            var nodes: [Node] = []
             
-            for node in nodes {
-                numberOfGraphFromRemote += node.value.count
+            for graph in try await self.session.fetchPullRequests(by: username) {
+                nodes += graph.value
             }
-            
+                        
+            var _nodes: [Node] = []
+            _nodes = nodes
+
             defer {
                 // Clean node data
                 try? mainContext?.delete(model: Node.self)
                 
                 // Save new node data
-                for node in nodes {
-                    let graphs = node.value
-                    
-                    for graph in graphs {
-                        mainContext?.insert(graph)
-                    }
+                for node in _nodes {
+                    mainContext?.insert(node)
                 }
                 
                 try? mainContext?.save()
             }
             
-            return numberOfGraphFromStorage() != numberOfGraphFromRemote
+            // Return the true If empty
+            guard !nodeFromStorage.isEmpty else { return false }
+
+            for node in nodeFromStorage {
+                nodes.removeAll(where: { $0.id == node.id })
+            }
+            
+            return nodes.count >= 1
         } catch {
             logger.error("\(username)'s hasNewPullRequest error: \(error.localizedDescription)")
-            return false
         }
+        
+        return false
     }
     
-    func numberOfGraphFromStorage() -> Int? {
+    var nodeFromStorage: [Node] {
         let fetchDescriptor = FetchDescriptor<Node>()
-        let nodesFromDescriptor = try? mainContext?.fetch(fetchDescriptor)
+        let nodeDescriptor = try? mainContext?.fetch(fetchDescriptor)
         
-        return nodesFromDescriptor?.count
+        return nodeDescriptor ?? []
     }
     
     func notifyUser() async throws {

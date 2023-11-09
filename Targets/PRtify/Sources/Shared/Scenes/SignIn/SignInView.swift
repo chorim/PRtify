@@ -38,6 +38,7 @@ struct SignInView: View, Loggable {
         .alert(error: $error)
     }
 
+    @MainActor
     func signIn() async {
         do {
             defer {

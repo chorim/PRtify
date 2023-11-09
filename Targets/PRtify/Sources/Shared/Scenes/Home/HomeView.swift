@@ -94,9 +94,7 @@ struct HomeView: View, Loggable {
                 ProfileView(user: Binding { user } set: { preferences.user = $0 })
             }
         }
-        // #if os(iOS)
         .alert(error: $error)
-        // #endif
     }
 
     @Sendable

@@ -10,11 +10,12 @@ import Foundation
 import AuthenticationServices
 
 public extension Session {
+    @MainActor
     func authorize(
         grants scopes: [Scopes],
         webAuthenticationSessionHandler: @escaping (ASWebAuthenticationSession) -> Void
     ) async throws -> AuthToken {
-        let authorizeURL = try authorizeURL(grants: scopes)
+        let authorizeURL = try await authorizeURL(grants: scopes)
 
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             webAuthenticationSessionHandler(
@@ -29,7 +30,7 @@ public extension Session {
         }
 
         guard let code = url.queryDictionary?["code"] else {
-            throw SessionError.invalidResponse
+            throw SessionError.missingArguments
         }
 
         let authToken = try await fetchRequestForToken(code: code)

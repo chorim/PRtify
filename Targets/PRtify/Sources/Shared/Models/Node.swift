@@ -100,6 +100,6 @@ public class Node: Codable {
 
 extension Node: Identifiable {
     public var id: String {
-        [url.absoluteString, repository.name].joined(separator: "-")
+        [url.absoluteString, title].joined(separator: "-")
     }
 }
