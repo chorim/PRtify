@@ -9,14 +9,17 @@
 import SwiftUI
 import AuthenticationServices
 import UserNotifications
+import Logging
 
-struct MainView: View, Loggable {
+struct MainView: View {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
     @EnvironmentObject private var preferences: Preferences
     @Environment(\.session) private var session: Session
 
     @State private var selection: Int = 0
     @State private var error: Error? = nil
+    
+    private let logger = Logger(category: "MainView")
         
     var body: some View {
         TabBarView

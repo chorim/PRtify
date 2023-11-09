@@ -8,11 +8,13 @@
 
 import SwiftUI
 import KeychainAccess
+import Logging
 
 @propertyWrapper
-public struct KeychainStorage<Value: Codable>: DynamicProperty, Loggable {
+public struct KeychainStorage<Value: Codable>: DynamicProperty {
     private let keychain: Keychain = Keychain()
     private let key: String
+    private let logger = Logger(category: "KeychainStorage")
     
     @State private var value: Value?
     

@@ -7,8 +7,9 @@
 //
 
 import Foundation
-import OSLog
+import Logging
 
+/*
 public protocol Loggable {
     var logger: Logger { get }
 }
@@ -37,5 +38,13 @@ extension Logger {
             .map { "[\($0.date.formatted())] [\($0.category)] \($0.composedMessage)" }
 
         return entries
+    }
+}
+*/
+extension Logger {
+    private static var subsystem: String = Bundle.main.bundleIdentifier!
+    
+    init(category label: String) {
+        self.init(label: "\(Self.subsystem).\(label)")
     }
 }

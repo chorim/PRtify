@@ -8,6 +8,7 @@
 
 import Foundation
 import Pulse
+import Logging
 
 extension Dictionary {
     public static var empty: Self { [:] }
@@ -18,7 +19,7 @@ extension Session {
     public typealias HTTPHeaders = [String: String]
 }
 
-public actor Session: Loggable {
+public actor Session {
     public static let shared: Session = {
         URLSessionProxyDelegate.enableAutomaticRegistration()
         return Session()
@@ -35,6 +36,8 @@ public actor Session: Loggable {
     public var credential: SessionCredential? {
         urlSession.credential
     }
+    
+    private let logger = Logger(category: "Session")
     
     public lazy var backgroundTaskSchedular: BackgroundTaskScheduler = BackgroundTaskScheduler(session: self)
 

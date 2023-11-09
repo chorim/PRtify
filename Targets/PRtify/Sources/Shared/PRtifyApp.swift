@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import Logging
 
 #if os(iOS)
 typealias ApplicationDelegateAdaptor = UIApplicationDelegateAdaptor
@@ -16,7 +17,9 @@ typealias ApplicationDelegateAdaptor = NSApplicationDelegateAdaptor
 #endif
 
 @main
-struct PRtifyApp: App, Loggable {
+struct PRtifyApp: App {
+    private let logger = Logger(category: "PRtifyApp")
+    
     static var isPreview: Bool {
         return ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     }

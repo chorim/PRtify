@@ -9,8 +9,9 @@
 import SwiftUI
 import SwiftData
 import SwiftUIIntrospect
+import Logging
 
-struct HomeView: View, Loggable {
+struct HomeView: View {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
     @EnvironmentObject private var preferences: Preferences
     
@@ -29,6 +30,8 @@ struct HomeView: View, Loggable {
     
     @Query(sort: [SortDescriptor(\Node.createdAt, order: .reverse)], animation: .smooth)
     public var nodes: [Node]
+    
+    let logger = Logger(category: "HomeView")
     
     private var user: User? {
         preferences.user

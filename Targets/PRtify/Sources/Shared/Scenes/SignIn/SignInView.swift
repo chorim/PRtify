@@ -8,14 +8,17 @@
 
 import SwiftUI
 import AuthenticationServices
+import Logging
 
-struct SignInView: View, Loggable {
+struct SignInView: View {
     @Environment(\.session) private var session: Session
 
     @State private var webAuthenticationSession: ASWebAuthenticationSession?
     @State private var error: Error?
     
     @Binding var authToken: Session.AuthToken?
+    
+    private let logger = Logger(category: "SignInView")
     
     var body: some View {
         ZStack {

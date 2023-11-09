@@ -12,5 +12,7 @@ let project = Project.app(name: "PRtify",
                             .external(name: "KeychainAccess"),
                             .external(name: "SwiftUIIntrospect"),
                             .external(name: "Pulse"),
-                            .external(name: "PulseUI")
+                            .external(name: "PulseUI"),
+                            .external(name: "Logging"),
+                            .external(name: "PulseLogHandler")
                           ])

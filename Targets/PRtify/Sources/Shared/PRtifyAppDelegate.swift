@@ -9,9 +9,11 @@
 import Foundation
 import UserNotifications
 import SwiftData
+import Logging
+import PulseLogHandler
 
 @MainActor
-class PRtifyAppDelegate: NSObject, ObservableObject, Loggable {
+class PRtifyAppDelegate: NSObject, ObservableObject {
     let session = Session.shared
     
     let container: ModelContainer = {
@@ -26,6 +28,8 @@ class PRtifyAppDelegate: NSObject, ObservableObject, Loggable {
     
     override init() {
         super.init()
+        
+        LoggingSystem.bootstrap(PersistentLogHandler.init)
         
         Task {
             await session.backgroundTaskSchedular.mainContext = container.mainContext
