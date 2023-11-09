@@ -159,7 +159,6 @@ public extension URLSession {
         set { objc_setAssociatedObject(self, &AssociatedKey.credentialKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
-    // swiftlint:disable function_body_length
     func dataTask<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
         var dataTask: URLSessionDataTask?
         
@@ -195,13 +194,15 @@ public extension URLSession {
             try await withCheckedThrowingContinuation { continuation in
                 dataTask = self.dataTask(with: mutableURLRequest) { data, response, error in
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        onError(SessionError.invalidResponse)
-                        return continuation.resume(throwing: SessionError.invalidResponse)
+                        let error = error ?? SessionError.invalidResponse
+                        onError(error)
+                        return continuation.resume(throwing: error)
                     }
 
                     guard (200..<300).contains(httpResponse.statusCode) else {
-                        onError(SessionError.invalidStatusCode(httpResponse.statusCode))
-                        return continuation.resume(throwing: SessionError.invalidStatusCode(httpResponse.statusCode))
+                        let error = error ?? SessionError.invalidStatusCode(httpResponse.statusCode)
+                        onError(error)
+                        return continuation.resume(throwing: error)
                     }
                     
                     guard let data = data, let response = response else {
