@@ -61,6 +61,9 @@ extension HomeView {
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
                     PullRequestView(node: node)
+                        .onTapGesture {
+                            openURL(node.url)
+                        }
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 
@@ -116,6 +119,16 @@ extension HomeView {
                 emptyView
             }
         }
+    }
+    
+    private func openURL(_ url: URL) {
+        #if os(iOS)
+        UIApplication.shared.open(url)
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #else
+        logger.error("Failed to openURL: Unknown platform.")
+        #endif
     }
 }
 

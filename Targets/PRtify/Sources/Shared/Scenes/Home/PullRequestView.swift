@@ -83,6 +83,12 @@ struct PullRequestView: View {
                     Spacer()
                 }
             }
+            
+            VStack(spacing: 0) {
+                Spacer()
+                Image(systemName: "chevron.right")
+                Spacer()
+            }
         }
         .preferredColorScheme(.dark)
     }

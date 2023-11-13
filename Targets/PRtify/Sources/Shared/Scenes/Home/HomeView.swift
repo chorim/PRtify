@@ -27,10 +27,7 @@ struct HomeView: View {
     @State var requestedNodes: HomeNodeState = .loading
 
     @State public var showingProfileView: Bool = false
-    
-    @Query(sort: [SortDescriptor(\Node.createdAt, order: .reverse)], animation: .smooth)
-    public var nodes: [Node]
-    
+
     let logger = Logger(category: "HomeView")
     
     private var user: User? {
@@ -149,9 +146,11 @@ struct HomeView: View {
             logger.info("All repositories has been fetched: \(Date())")
         } catch {
             logger.error("Failed to fetchRepositories with error: \(error)")
+        
             self.error = error
         }
     }
+    
 }
 
 #Preview {
