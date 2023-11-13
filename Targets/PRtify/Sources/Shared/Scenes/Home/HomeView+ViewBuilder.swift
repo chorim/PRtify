@@ -88,6 +88,9 @@ extension HomeView {
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
                     PullRequestView(node: node)
+                        .onTapGesture {
+                            openURL(node.url)
+                        }
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 
@@ -112,6 +115,9 @@ extension HomeView {
             case .loaded(let nodes):
                 ForEach(nodes) { (node: Node) in
                     PullRequestView(node: node)
+                        .onTapGesture {
+                            openURL(node.url)
+                        }
                 }
                 .listRowBackground(Color.flatDarkContainerBackground)
                 
