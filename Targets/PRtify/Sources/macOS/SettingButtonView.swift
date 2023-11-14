@@ -19,7 +19,7 @@ struct SettingButtonView: View {
     var body: some View {
         Button {
             window = SettingView(authToken: $authToken, selection: .constant(1))
-                .frame(width: 350, height: 400)
+                .frame(width: 550, height: 400)
                 .environmentObject(delegate)
                 .environmentObject(preferences)
                 .openWindow(title: "Settings", sender: self)

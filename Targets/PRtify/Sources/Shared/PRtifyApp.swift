@@ -42,6 +42,10 @@ struct PRtifyApp: App {
         delegate.container
     }
     
+    var repeating: TimeInterval {
+        preferences.refreshRates.timeInterval
+    }
+    
     var body: some Scene {
         #if os(macOS)
         MenuBarExtra {
@@ -76,6 +80,13 @@ struct PRtifyApp: App {
                 }
             }
         }
+        .onChange(of: preferences.refreshRates) { _, newRefreshRates in
+            logger.info("refreshRates value changed: \(newRefreshRates)")
+            
+            Task {
+                await session.backgroundTaskSchedular.invalidate()
+            }
+        }
         .menuBarExtraStyle(.window)
         #else
         WindowGroup {
@@ -92,6 +103,13 @@ struct PRtifyApp: App {
                 }
             }
         }
+        .onChange(of: preferences.refreshRates) { _, newRefreshRates in
+            logger.info("refreshRates value changed: \(newRefreshRates)")
+            
+            Task {
+                await session.backgroundTaskSchedular.invalidate()
+            }
+        }
         .backgroundTask(.appRefresh(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)) {
             logger.notice("Start the backgroundRefresh")
             
@@ -104,7 +122,7 @@ struct PRtifyApp: App {
                 return
             }
             
-            await session.backgroundTaskSchedular.backgroundRefresh(by: username)
+            await session.backgroundTaskSchedular.backgroundRefresh(by: username, repeating: repeating)
         }
         .modelContainer(container)
         #endif
@@ -124,6 +142,10 @@ struct PRtifyApp: App {
             return
         }
         
-        try await session.backgroundTaskSchedular.scheduleAppRefresh(by: username, using: phase)
+        try await session.backgroundTaskSchedular.scheduleAppRefresh(
+            by: username,
+            using: phase,
+            repeating: repeating
+        )
     }
 }

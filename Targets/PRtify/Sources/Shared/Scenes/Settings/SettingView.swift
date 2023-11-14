@@ -24,6 +24,14 @@ struct SettingView: View {
         preferences.user
     }
     
+    private var selectedRefreshRates: Binding<BackgroundTaskScheduler.RefreshRate> {
+        Binding {
+            return preferences.refreshRates
+        } set: { newValue in
+            preferences.refreshRates = newValue
+        }
+    }
+    
     @ViewBuilder
     var linkProfileButton: some View {
         #if os(iOS)
@@ -38,6 +46,16 @@ struct SettingView: View {
                 Text("Open My Profile")
             }
         }
+        #endif
+    }
+    
+    @ViewBuilder
+    var refreshRateFooterText: some View {
+        #if os(iOS)
+        Text("Background refresh may not work smoothly on iOS/iPadOS device")
+            .foregroundStyle(.red)
+        #else
+        Text("Higher refresh rates may result in higher battery consumption.")
         #endif
     }
     
@@ -56,8 +74,16 @@ struct SettingView: View {
                             linkProfileButton
                         }
                         
-                        Section(header: Text("Refresh rates"), footer: Text("Higher refresh rates may result in higher battery consumption.")) {
-                            
+                        Section(
+                            header: Text("Refresh rates"),
+                            footer: refreshRateFooterText
+                        ) {
+                            Picker("Refresh rates", selection: selectedRefreshRates) {
+                                ForEach(BackgroundTaskScheduler.RefreshRate.allCases, id: \.self) { (refreshRate: BackgroundTaskScheduler.RefreshRate) in
+                                    Text(refreshRate.name)
+                                }
+                            }
+                            .pickerStyle(.segmented)
                         }
                         
                         Section {

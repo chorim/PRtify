@@ -45,19 +45,41 @@ public class BackgroundTaskScheduler {
     
     public var mainContext: ModelContext?
     
-    static var preferredBackgroundTasksTimeInterval: TimeInterval {
-        #if DEBUG
-        60
-        #else
-        (16 / 2) * 60 // Fetch no earlier than 8 minutes from now
-        #endif
+    public enum RefreshRate: Int, CaseIterable {
+        /// 1 mins
+        case quickly = 1
+        /// 5 mins
+        case frequently
+        /// 10 mins
+        case slowly
+        
+        /// custom mins
+        /// case custom(TimeInterval)
+        
+        var name: String {
+            switch self {
+            case .quickly:
+                return "Quickly"
+            case .frequently:
+                return "Frequently"
+            case .slowly:
+                return "Slowly"
+            }
+        }
+        
+        var timeInterval: TimeInterval {
+            switch self {
+            case .quickly:
+                return 1 * 60
+            case .frequently:
+                return 5 * 60
+            case .slowly:
+                return 10 * 60
+            }
+        }
     }
     
-    static var preferredBackgroundRefreshDate: Date {
-        Date(timeIntervalSinceNow: preferredBackgroundTasksTimeInterval)
-    }
-    
-    func newBackgroundTimer(by username: String) -> DispatchSourceTimer {
+    func newBackgroundTimer(by username: String, repeating: TimeInterval) -> DispatchSourceTimer {
         let timerSource = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         timerSource.setEventHandler {
             Task {
@@ -77,8 +99,8 @@ public class BackgroundTaskScheduler {
             }
         }
         timerSource.schedule(
-            deadline: .now() + Self.preferredBackgroundTasksTimeInterval,
-            repeating: Self.preferredBackgroundTasksTimeInterval,
+            deadline: .now() + repeating,
+            repeating: repeating,
             leeway: .seconds(30)
         )
         logger.notice("New background timer has been created: \(String(describing: timerSource))")
@@ -100,7 +122,7 @@ public class BackgroundTaskScheduler {
 }
 
 public extension BackgroundTaskScheduler {
-    func scheduleAppRefresh(by username: String, using phase: ScenePhase) throws {
+    func scheduleAppRefresh(by username: String, using phase: ScenePhase, repeating: TimeInterval) throws {
         switch phase {
         case .active, .inactive:
             invalidate()
@@ -110,7 +132,7 @@ public extension BackgroundTaskScheduler {
             logger.debug("Requesting the BGAppRefreshTaskRequest for: \(Self.backgroundRefreshBackgroundTaskIdentifier)")
             
             let request = BGAppRefreshTaskRequest(identifier: Self.backgroundRefreshBackgroundTaskIdentifier)
-            request.earliestBeginDate = Self.preferredBackgroundRefreshDate
+            request.earliestBeginDate = Date(timeIntervalSinceNow: repeating)
             try BGTaskScheduler.shared.submit(request)
             
             // e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"is.byeon.PRtify.background-refresh"]
@@ -118,11 +140,11 @@ public extension BackgroundTaskScheduler {
             
             #if DEBUG
             Task {
-                await notifyForDebug("[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!", message: "preferredBackgroundTasksTimeInterval: \(Self.preferredBackgroundTasksTimeInterval)")
+                await notifyForDebug("[DEV] Submitted the BGAppRefreshTaskRequest for \(Self.backgroundRefreshBackgroundTaskIdentifier)!", message: "repeating: \(repeating)")
             }
             #endif
             #elseif os(macOS)
-            backgroundTimer = newBackgroundTimer(by: username)
+            backgroundTimer = newBackgroundTimer(by: username, repeating: repeating)
             #else
             fatalError("Unsupported platform.")
             #endif
@@ -134,10 +156,10 @@ public extension BackgroundTaskScheduler {
     }
     
     @discardableResult
-    func backgroundRefresh(by username: String) async -> Bool {
+    func backgroundRefresh(by username: String, repeating: TimeInterval) async -> Bool {
         #if os(macOS)
         // Only macOS
-        backgroundTimer = newBackgroundTimer(by: username)
+        backgroundTimer = newBackgroundTimer(by: username, repeating: repeating)
         #endif
         
         do {
@@ -149,7 +171,7 @@ public extension BackgroundTaskScheduler {
                 try await notifyUser()
             }
             #endif
-            try scheduleAppRefresh(by: username, using: .background)
+            try scheduleAppRefresh(by: username, using: .background, repeating: repeating)
         } catch {
             logger.error("Error retrieving data from background scheduler: \(error.localizedDescription)")
             return false
