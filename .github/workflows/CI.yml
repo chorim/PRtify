@@ -18,9 +18,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        destination: ["platform=OS X,arch=x86_64,variant=Mac Catalyst", "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"]
+        destination: ["platform=OS X,arch=x86_64", "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"]
         include:
-          - destination: "platform=OS X,arch=x86_64,variant=Mac Catalyst"
+          - destination: "platform=OS X,arch=x86_64"
             platform: "macOS"
           - destination: "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"
             platform: "iOS"
