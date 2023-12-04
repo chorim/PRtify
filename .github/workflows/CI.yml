@@ -40,6 +40,12 @@ jobs:
         with:
           command: 'fetch'
           arguments: ''
+
+      - name: Generate the project
+        uses: tuist/tuist-action@0.13.0
+        with:
+          command: 'generate'
+          arguments: '-n'
           
       - name: Run build
         run: xcodebuild -workspace PRtify.xcworkspace -scheme "PRtify (${{matrix.platform}})" -destination '${{ matrix.destination }}' build
