@@ -1,0 +1,51 @@
+name: "PRtify CI"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  Test:
+    name: Run test for ${{ matrix.platform }}
+    runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        destination: ["platform=OS X,arch=x86_64", "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"]
+        include:
+          - destination: "platform=OS X,arch=x86_64"
+            platform: "macOS"
+          - destination: "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"
+            platform: "iOS"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Get swift version
+        run: swift --version
+        
+      - name: Setup tuist
+        uses: tuist/tuist-action@0.13.0
+        with:
+          command: 'fetch'
+          arguments: ''
+
+      - name: Generate the project
+        uses: tuist/tuist-action@0.13.0
+        with:
+          command: 'generate'
+          arguments: '-n'
+          
+      - name: Run build
+        run: xcodebuild -workspace PRtify.xcworkspace -scheme "PRtify (${{matrix.platform}})" -destination '${{ matrix.destination }}' build
