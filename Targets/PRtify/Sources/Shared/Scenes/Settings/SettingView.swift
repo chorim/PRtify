@@ -20,6 +20,10 @@ struct SettingView: View {
     @State private var showingNetworkDebugger: Bool = false
     @State private var showingWebView: Bool = false
     
+    #if DEBUG
+    @State private var showingAccessTokenCopied: Bool = false
+    #endif
+    
     private var user: User? {
         preferences.user
     }
@@ -83,7 +87,9 @@ struct SettingView: View {
                                     Text(refreshRate.name)
                                 }
                             }
+                            #if os(macOS)
                             .pickerStyle(.segmented)
+                            #endif
                         }
                         
                         Section {
@@ -114,7 +120,18 @@ struct SettingView: View {
                         }
 
                         Text("Build version: ")
-                        Text("Access Token: \(String(describing: authToken?.accessToken))")
+                        Text("Access Token: \(String(describing: authToken?.accessToken ?? ""))")
+                            .onTapGesture {
+                                if let accessToken = authToken?.accessToken {
+                                    #if os(iOS)
+                                    UIPasteboard.general.string = accessToken
+                                    #elseif os(macOS)
+                                    NSPasteboard.general.declareTypes([.string], owner: self)
+                                    NSPasteboard.general.setString(accessToken, forType: .string)
+                                    #endif
+                                    showingAccessTokenCopied = true
+                                }
+                            }
                     }
                     #endif
                 }
@@ -128,6 +145,11 @@ struct SettingView: View {
             }
             #endif
         }
+        #if DEBUG
+        .alert(isPresented: $showingAccessTokenCopied) {
+            Alert(title: Text("Copied the access token!"))
+        }
+        #endif
         .sheet(isPresented: $showingNetworkDebugger) {
             PulseView()
         }

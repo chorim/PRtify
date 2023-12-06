@@ -76,7 +76,7 @@ public actor Session {
                                         httpMethod: .post,
                                         httpParameters: httpParameters)
 
-        return try await urlSession.dataTask(for: urlRequest, AuthToken.self)
+        return try await urlSession.dataTask(for: urlRequest, of: AuthToken.self)
     }
     
     public func updateToken(with authToken: AuthToken?) {
@@ -88,7 +88,7 @@ public actor Session {
         
         let urlRequest = URLRequest(url: url)
         
-        return try await urlSession.dataTask(for: urlRequest, User.self)
+        return try await urlSession.dataTask(for: urlRequest, of: User.self)
     }
     
     public func fetchPullRequests(by username: String) async throws -> [QuerySearchFieldType: [Node]] {
@@ -136,7 +136,7 @@ private extension Session {
                                         httpMethod: .post,
                                         httpParameters: httpParameters)
         
-        return try await urlSession.dataTask(for: urlRequest, Graph.self)
+        return try await urlSession.dataTask(for: urlRequest, of: Graph.self)
     }
 }
 
@@ -159,7 +159,7 @@ public extension URLSession {
         set { objc_setAssociatedObject(self, &AssociatedKey.credentialKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
-    func dataTask<T: Decodable>(for urlRequest: URLRequest, _ model: T.Type) async throws -> T {
+    func dataTask<T: Decodable>(for urlRequest: URLRequest, of model: T.Type) async throws -> T {
         var dataTask: URLSessionDataTask?
         
         let onSuccess: (Data, URLResponse) -> Void = { data, _ in
