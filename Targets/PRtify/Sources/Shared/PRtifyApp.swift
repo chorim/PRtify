@@ -57,7 +57,7 @@ struct PRtifyApp: App {
                 }
                 .modelContainer(container)
         } label: {
-            Image(systemName: "tray.fill")
+            Image("MenuBarIcon")
                 .task {
                     // Since macOS environment depends on menu bar, background scheduler needs calling after app launched.
                     // Default value is background after app launched.
@@ -117,7 +117,7 @@ struct PRtifyApp: App {
                 logger.notice("Finish the backgroundRefresh")
             }
             
-            guard let username = await preferences.user?.login, await session.credential?.authToken != nil else {
+            guard let username = await preferences.user?.login, await preferences.authToken != nil else {
                 logger.warning("Unauthorized user. Stopped the backgroundTask: \(BackgroundTaskScheduler.backgroundRefreshBackgroundTaskIdentifier)")
                 return
             }
