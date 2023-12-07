@@ -49,3 +49,6 @@ jobs:
           
       - name: Run build
         run: xcodebuild -workspace PRtify.xcworkspace -scheme "PRtify (${{matrix.platform}})" -destination '${{ matrix.destination }}' build
+
+      - name: Run tests
+        run: xcodebuild -workspace PRtify.xcworkspace -scheme "PRtify (${{matrix.platform}})" -destination '${{ matrix.destination }}' test -enableCodeCoverage YES
