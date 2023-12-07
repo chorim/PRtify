@@ -64,6 +64,9 @@ extension Project {
         let sourceFilesList: [String] = ["Shared", platformDisplayName]
             .map { "Targets/\(name)/Sources/\($0)/**" }
         
+        let testSourceFilesList = ["Shared", platformDisplayName]
+            .map { "Targets/\(name)/Tests/\($0)/**" }
+        
         let mainTarget = Target(
             name: targetName,
             platform: platform,
@@ -77,17 +80,18 @@ extension Project {
             dependencies: dependencies
         )
 
-        // let testTarget = Target(
-        //     name: "\(targetName)Tests",
-        //     platform: platform,
-        //     product: .unitTests,
-        //     productName: "\(name)Tests",
-        //     bundleId: "\(organizationName).\(name)Tests",
-        //     infoPlist: .default,
-        //     sources: ["Targets/\(name)/Tests/**"],
-        //     dependencies: [
-        //         .target(name: targetName)
-        //     ])
-        return [mainTarget]
+        let testTarget = Target(
+            name: "\(targetName)Tests",
+            platform: platform,
+            product: .unitTests,
+            productName: "\(name)Tests",
+            bundleId: "\(organizationName).\(name)Tests",
+            infoPlist: .default,
+            sources: SourceFilesList(globs: testSourceFilesList),
+            dependencies: [
+                .target(name: targetName)
+            ])
+        
+        return [mainTarget, testTarget]
     }
 }
