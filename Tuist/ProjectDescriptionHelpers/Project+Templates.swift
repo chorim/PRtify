@@ -67,12 +67,23 @@ extension Project {
         let testSourceFilesList = ["Shared", platformDisplayName]
             .map { "Targets/\(name)/Tests/\($0)/**" }
         
+        let deploymentTarget: DeploymentTarget? = {
+            switch platform {
+            case .iOS: return .iOS(targetVersion: "17.0", devices: .iphone, supportsMacDesignedForIOS: false)
+            case .macOS: return .macOS(targetVersion: "13.0")
+            default: return nil
+            }
+        }()
+        
+        guard let deploymentTarget else { fatalError("Unknown deployment target: \(platform)") }
+        
         let mainTarget = Target(
             name: targetName,
             platform: platform,
             product: .app,
             productName: name,
             bundleId: "\(organizationName).\(name)",
+            deploymentTarget: deploymentTarget,
             infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(platformDisplayName)/\(name).plist")),
             sources: SourceFilesList(globs: sourceFilesList),
             resources: ["Targets/\(name)/Resources/\(platformDisplayName)/**"],
@@ -86,6 +97,7 @@ extension Project {
             product: .unitTests,
             productName: "\(name)Tests",
             bundleId: "\(organizationName).\(name)Tests",
+            deploymentTarget: deploymentTarget,
             infoPlist: .default,
             sources: SourceFilesList(globs: testSourceFilesList),
             dependencies: [
