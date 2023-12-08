@@ -70,7 +70,7 @@ extension Project {
         let deploymentTarget: DeploymentTarget? = {
             switch platform {
             case .iOS: return .iOS(targetVersion: "17.0", devices: .iphone, supportsMacDesignedForIOS: false)
-            case .macOS: return .macOS(targetVersion: "13.0")
+            case .macOS: return .macOS(targetVersion: "13.4")
             default: return nil
             }
         }()
