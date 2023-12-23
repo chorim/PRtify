@@ -26,6 +26,8 @@
 	<string>$(GITHUB_API_KEY)</string>
 	<key>GITHUB_API_SECRET</key>
 	<string>$(GITHUB_API_SECRET)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
