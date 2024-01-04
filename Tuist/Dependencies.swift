@@ -15,7 +15,8 @@ let dependencies = Dependencies(
             .remote(url: "https://github.com/siteline/swiftui-introspect", requirement: .exact("1.1.0")),
             .remote(url: "https://github.com/kean/Pulse", requirement: .exact("4.0.3")),
             .remote(url: "https://github.com/apple/swift-log", requirement: .exact("1.5.3")),
-            .remote(url: "https://github.com/kean/PulseLogHandler", requirement: .exact("4.0.1"))
+            .remote(url: "https://github.com/kean/PulseLogHandler", requirement: .exact("4.0.1")),
+            .remote(url: "https://github.com/firebase/firebase-ios-sdk", requirement: .exact("10.19.1"))
         ]
     )
 )

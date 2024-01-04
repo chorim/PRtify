@@ -10,6 +10,7 @@ import SwiftUI
 import SwiftData
 import SwiftUIIntrospect
 import Logging
+import FirebaseAnalytics
 
 struct HomeView: View {
     @EnvironmentObject private var delegate: PRtifyAppDelegate
@@ -106,6 +107,9 @@ struct HomeView: View {
         
         do {
             preferences.user = try await session.fetchProfile()
+            if let userID = preferences.user?.login {
+                Analytics.setUserID(userID)
+            }
         } catch {
             logger.error("fetchProfile() error: \(error.localizedDescription)")
             self.error = error

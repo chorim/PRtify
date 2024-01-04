@@ -14,5 +14,7 @@ let project = Project.app(name: "PRtify",
                             .external(name: "Pulse"),
                             .external(name: "PulseUI"),
                             .external(name: "Logging"),
-                            .external(name: "PulseLogHandler")
+                            .external(name: "PulseLogHandler"),
+                            .external(name: "FirebaseAnalytics"),
+                            .external(name: "FirebaseCrashlytics")
                           ])

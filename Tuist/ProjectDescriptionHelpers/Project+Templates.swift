@@ -67,6 +67,10 @@ extension Project {
         let testSourceFilesList = ["Shared", platformDisplayName]
             .map { "Targets/\(name)/Tests/\($0)/**" }
         
+        let resourceFilesList: [ResourceFileElement] = ["Shared", platformDisplayName]
+            .map { "Targets/\(name)/Resources/\($0)/**" }
+            .map { ResourceFileElement.glob(pattern: .relativeToRoot($0)) }
+        
         let deploymentTarget: DeploymentTarget? = {
             switch platform {
             case .iOS: return .iOS(targetVersion: "17.0", devices: .iphone, supportsMacDesignedForIOS: false)
@@ -86,7 +90,7 @@ extension Project {
             deploymentTarget: deploymentTarget,
             infoPlist: .file(path: .relativeToRoot("Targets/\(name)/Resources/\(platformDisplayName)/\(name).plist")),
             sources: SourceFilesList(globs: sourceFilesList),
-            resources: ["Targets/\(name)/Resources/\(platformDisplayName)/**"],
+            resources: ResourceFileElements(resources: resourceFilesList),
             scripts: [.pre(path: .relativeToRoot("scripts/lint.sh"), name: "SwiftLint")],
             dependencies: dependencies
         )

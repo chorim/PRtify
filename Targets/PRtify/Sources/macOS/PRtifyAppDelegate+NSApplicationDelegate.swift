@@ -9,9 +9,12 @@
 #if os(macOS)
 import AppKit
 import UserNotifications
+import FirebaseCore
 
 extension PRtifyAppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        FirebaseApp.configure()
+        
         UNUserNotificationCenter.current().delegate = self
     }
 }
