@@ -194,17 +194,15 @@ private extension BackgroundTaskScheduler {
             var _nodes: [Node] = []
             _nodes = nodes
 
-            defer {
-                // Clean node data
-                try? mainContext?.delete(model: Node.self)
-                
-                // Save new node data
-                for node in _nodes {
-                    mainContext?.insert(node)
-                }
-                
-                try? mainContext?.save()
+            // Clean node data
+            try? mainContext?.delete(model: Node.self)
+            
+            // Save new node data
+            for node in _nodes {
+                mainContext?.insert(node)
             }
+            
+            try? mainContext?.save()
             
             // Return the true If empty
             guard !nodeFromStorage.isEmpty else { return false }
