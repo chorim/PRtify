@@ -194,36 +194,30 @@ private extension BackgroundTaskScheduler {
             var _nodes: [Node] = []
             _nodes = nodes
 
-            // Clean node data
-            try? mainContext?.delete(model: Node.self)
-            
-            // Save new node data
-            for node in _nodes {
-                mainContext?.insert(node)
-            }
-            
-            try? mainContext?.save()
-            
-            // Return the true If empty
-            guard !nodeFromStorage.isEmpty else { return false }
+            if let modelContainer = mainContext?.container {
+                let actor = NodeModelActor(modelContainer: modelContainer)
 
-            for node in nodeFromStorage {
-                nodes.removeAll(where: { $0.id == node.id })
+                try await actor.insertAndDelete(nodes: _nodes)
+                
+                let nodesFromStorage = await actor.nodesFromStorage()
+                
+                // Return the true If empty
+                guard !nodesFromStorage.isEmpty else { return false }
+
+                for node in nodesFromStorage {
+                    nodes.removeAll(where: { $0.id == node.id })
+                }
+                
+                return nodes.count >= 1
+            } else {
+                logger.error("mainContext has been not initialized.")
+                fatalError("mainContext has been not initialized.")
             }
-            
-            return nodes.count >= 1
         } catch {
             logger.error("\(username)'s hasNewPullRequest error: \(error.localizedDescription)")
         }
         
         return false
-    }
-    
-    var nodeFromStorage: [Node] {
-        let fetchDescriptor = FetchDescriptor<Node>()
-        let nodeDescriptor = try? mainContext?.fetch(fetchDescriptor)
-        
-        return nodeDescriptor ?? []
     }
     
     func notifyUser() async throws {

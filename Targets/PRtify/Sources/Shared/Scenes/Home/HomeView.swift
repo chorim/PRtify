@@ -127,16 +127,10 @@ struct HomeView: View {
             }
             
             let nodes = try await session.fetchPullRequests(by: username)
-            try modelContext.delete(model: Node.self)
-            for node in nodes {
-                let graphs = node.value
-                
-                for graph in graphs {
-                    modelContext.insert(graph)
-                }
-            }
             
-            try modelContext.save()
+            let actor = NodeModelActor(modelContainer: modelContext.container)
+            
+            try await actor.insertAndDelete(nodes: nodes.flatMap { $0.value })
             
             let createdNodes: [Node] = nodes[.created(username: username)] ?? []
             self.createdNodes = createdNodes.isEmpty ? .empty : .loaded(createdNodes)
