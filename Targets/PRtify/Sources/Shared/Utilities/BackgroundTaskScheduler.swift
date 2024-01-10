@@ -170,7 +170,7 @@ public extension BackgroundTaskScheduler {
             // Only iOS
             #if os(iOS)
             let hasNewPullRequest = await hasNewPullRequest(by: username)
-            insertAndDelete(cachedNodes)
+            await insertAndDelete(cachedNodes)
             
             if hasNewPullRequest {
                 try await notifyUser()
