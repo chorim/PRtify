@@ -20,6 +20,8 @@ public class BackgroundTaskScheduler {
     
     private let logger = Logger(category: "BackgroundTaskScheduler")
     
+    private var cachedNodes: [Node] = []
+    
     #if os(macOS)
     private var backgroundTimer: DispatchSourceTimer? {
         willSet {
@@ -85,6 +87,8 @@ public class BackgroundTaskScheduler {
             Task {
                 do {
                     let hasNewPullRequest = await self.hasNewPullRequest(by: username)
+                    await self.insertAndDelete(self.cachedNodes)
+                    
                     if hasNewPullRequest {
                         try await self.notifyUser()
                     }
@@ -166,6 +170,7 @@ public extension BackgroundTaskScheduler {
             // Only iOS
             #if os(iOS)
             let hasNewPullRequest = await hasNewPullRequest(by: username)
+            insertAndDelete(cachedNodes)
             
             if hasNewPullRequest {
                 try await notifyUser()
@@ -190,16 +195,12 @@ private extension BackgroundTaskScheduler {
             for graph in try await self.session.fetchPullRequests(by: username) {
                 nodes += graph.value
             }
-                        
-            var _nodes: [Node] = []
-            _nodes = nodes
 
             if let modelContainer = mainContext?.container {
                 let actor = NodeModelActor(modelContainer: modelContainer)
-
-                try await actor.insertAndDelete(nodes: _nodes)
-                
                 let nodesFromStorage = await actor.nodesFromStorage()
+                
+                cachedNodes = nodes
                 
                 // Return the true If empty
                 guard !nodesFromStorage.isEmpty else { return false }
@@ -218,6 +219,16 @@ private extension BackgroundTaskScheduler {
         }
         
         return false
+    }
+    
+    func insertAndDelete(_ nodes: [Node]) async {
+        guard let modelContainer = mainContext?.container else { return }
+        let actor = NodeModelActor(modelContainer: modelContainer)
+        do {
+            try await actor.insertAndDelete(nodes: nodes)
+        } catch {
+            logger.error("Failed to insertAndDelete error: \(error.localizedDescription)")
+        }
     }
     
     func notifyUser() async throws {
